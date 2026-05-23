@@ -12,12 +12,15 @@ export class ReportService {
     if (category) {
       filter.category = category;
     }
+    console.log('[REPORT_SERVICE] getReportData → filter:', JSON.stringify(filter));
 
     const total = await ReconciliationResult.countDocuments(filter);
+    console.log('[REPORT_SERVICE] Total matching documents:', total);
     const results = await ReconciliationResult.find(filter)
       .skip((page - 1) * limit)
       .limit(limit)
       .lean();
+    console.log('[REPORT_SERVICE] Fetched', results.length, 'results (page', page, 'of', Math.ceil(total / limit), ')');
 
     return {
       results,
@@ -31,10 +34,13 @@ export class ReportService {
   }
 
   public static async getRunSummary(runId: string) {
+    console.log('[REPORT_SERVICE] getRunSummary → fetching run:', runId);
     const run = await ReconciliationRun.findOne({ runId }).lean();
     if (!run) {
+      console.log('[REPORT_SERVICE] Run NOT found:', runId);
       throw new Error(`Reconciliation run not found: ${runId}`);
     }
+    console.log('[REPORT_SERVICE] Run found → status:', run.status);
     return {
       runId,
       status: run.status,
@@ -47,16 +53,20 @@ export class ReportService {
   }
 
   public static async getUnmatched(runId: string) {
+    console.log('[REPORT_SERVICE] getUnmatched → fetching for runId:', runId);
     const results = await ReconciliationResult.find({
       runId,
       category: { $in: ['unmatched_user', 'unmatched_exchange'] }
     }).lean();
+    console.log('[REPORT_SERVICE] Unmatched results fetched:', results.length);
 
     return results;
   }
 
   public static async generateCSVContent(runId: string): Promise<string> {
+    console.log('[REPORT_SERVICE] generateCSVContent → fetching all results for runId:', runId);
     const results = await ReconciliationResult.find({ runId }).lean();
+    console.log('[REPORT_SERVICE] CSV: total rows to export:', results.length);
     
     const headers = [
       'Status',

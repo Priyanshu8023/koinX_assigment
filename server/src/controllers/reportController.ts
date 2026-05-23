@@ -14,6 +14,8 @@ export async function getReport(
     const limit = Number(req.query.limit) || 50;
     const category = req.query.category as string | undefined;
 
+    console.log(`\n[REPORT] GET /report/${runId} → page=${page}, limit=${limit}, category=${category || 'all'}, format=${req.query.format || 'json'}`);
+
     const runExists = await ReconciliationRun.exists({ runId });
     if (!runExists) {
       res.status(404).json({
@@ -27,7 +29,9 @@ export async function getReport(
 
      
     if (req.query.format === 'csv') {
+      console.log('[REPORT] Generating CSV export for runId:', runId);
       const csvContent = await ReportService.generateCSVContent(runId);
+      console.log('[REPORT] CSV generated, length:', csvContent.length, 'chars');
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${runId}_reconciliation_report.csv"`);
       res.status(200).send(csvContent);
@@ -35,6 +39,7 @@ export async function getReport(
     }
 
     const reportData = await ReportService.getReportData(runId, page, limit, category);
+    console.log('[REPORT] Fetched results:', reportData.results.length, '| Total:', reportData.pagination.total, '| Pages:', reportData.pagination.pages);
     
     res.status(200).json({
       success: true,
@@ -56,6 +61,7 @@ export async function getSummary(
 ): Promise<void> {
   try {
     const runId = req.params.runId as string;
+    console.log(`\n[SUMMARY] GET /report/${runId}/summary`);
 
     const runExists = await ReconciliationRun.exists({ runId });
     if (!runExists) {
@@ -69,6 +75,8 @@ export async function getSummary(
     }
 
     const summaryData = await ReportService.getRunSummary(runId);
+    console.log('[SUMMARY] Run status:', summaryData.status);
+    console.log('[SUMMARY] Summary data:', JSON.stringify(summaryData.summary, null, 2));
     
     res.status(200).json({
       success: true,
@@ -91,6 +99,7 @@ export async function getUnmatchedRecords(
 ): Promise<void> {
   try {
     const runId = req.params.runId as string;
+    console.log(`\n[UNMATCHED] GET /report/${runId}/unmatched`);
 
      
     const runExists = await ReconciliationRun.exists({ runId });
@@ -105,6 +114,7 @@ export async function getUnmatchedRecords(
     }
 
     const unmatched = await ReportService.getUnmatched(runId);
+    console.log('[UNMATCHED] Fetched', unmatched.length, 'unmatched records');
 
     const formattedUnmatched = unmatched.map(item => ({
       category: item.category,
@@ -112,6 +122,9 @@ export async function getUnmatchedRecords(
       userTransaction: item.userTransaction,
       exchangeTransaction: item.exchangeTransaction
     }));
+
+    console.log('[UNMATCHED] Unmatched user:', formattedUnmatched.filter(u => u.category === 'unmatched_user').length);
+    console.log('[UNMATCHED] Unmatched exchange:', formattedUnmatched.filter(u => u.category === 'unmatched_exchange').length);
 
     res.status(200).json({
       success: true,

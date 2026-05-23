@@ -17,12 +17,15 @@ export class MatchingEngine {
     const config = run.config;
 
     try {
+      console.log('\n--- [MATCHING] Fetching transactions for runId:', runId, '---');
       const userTxs = await UserTransaction.find({ runId, isValid: true, isDuplicate: false })
         .sort({ timestamp: 1 })
         .lean();
       const exchangeTxs = await ExchangeTransaction.find({ runId, isValid: true, isDuplicate: false })
         .sort({ timestamp: 1 })
         .lean();
+      console.log('[MATCHING] Fetched user transactions:', userTxs.length);
+      console.log('[MATCHING] Fetched exchange transactions:', exchangeTxs.length);
 
       const exchangeIndex = new Map<string, any[]>();
       for (const tx of exchangeTxs) {
@@ -32,6 +35,7 @@ export class MatchingEngine {
         }
         exchangeIndex.get(key)!.push(tx);
       }
+      console.log('[MATCHING] Exchange index keys:', [...exchangeIndex.keys()]);
 
       const userIndex = new Map<string, any[]>();
       for (const tx of userTxs) {
@@ -41,6 +45,7 @@ export class MatchingEngine {
         }
         userIndex.get(key)!.push(tx);
       }
+      console.log('[MATCHING] User index keys:', [...userIndex.keys()]);
 
 
       for (const group of exchangeIndex.values()) {
@@ -161,8 +166,16 @@ export class MatchingEngine {
       const unmatchedUserCount = results.filter(r => r.category === 'unmatched_user').length;
       const unmatchedExchangeCount = results.filter(r => r.category === 'unmatched_exchange').length;
 
+      console.log('[MATCHING] Results summary:');
+      console.log('  Matched:', matchedCount);
+      console.log('  Conflicting:', conflictingCount);
+      console.log('  Unmatched User:', unmatchedUserCount);
+      console.log('  Unmatched Exchange:', unmatchedExchangeCount);
+      console.log('  Total results:', results.length);
+
       const flaggedUser = await UserTransaction.countDocuments({ runId, isValid: false });
       const flaggedExchange = await ExchangeTransaction.countDocuments({ runId, isValid: false });
+      console.log('  Flagged (invalid) rows → user:', flaggedUser, '| exchange:', flaggedExchange);
 
       run.status = 'completed';
       run.completedAt = new Date();
@@ -179,6 +192,7 @@ export class MatchingEngine {
       };
 
       await run.save();
+      console.log('--- [MATCHING] Done ---\n');
     } catch (error: any) {
       run.status = 'failed';
       run.completedAt = new Date();

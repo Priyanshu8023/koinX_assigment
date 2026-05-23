@@ -27,10 +27,17 @@ export class IngestionService {
     userFilePath: string,
     exchangeFilePath: string
   ): Promise<IngestionStats> {
+    console.log('\n--- [INGESTION] Starting file ingestion for runId:', runId, '---');
     
+    console.log('[INGESTION] Ingesting USER transactions...');
     const userStats = await this.ingestUserTransactions(runId, userFilePath);
+    console.log('[INGESTION] User stats:', JSON.stringify(userStats));
 
+    console.log('[INGESTION] Ingesting EXCHANGE transactions...');
     const exchangeStats = await this.ingestExchangeTransactions(runId, exchangeFilePath);
+    console.log('[INGESTION] Exchange stats:', JSON.stringify(exchangeStats));
+
+    console.log('--- [INGESTION] Ingestion complete ---\n');
 
     return {
       user: userStats,
@@ -117,6 +124,7 @@ export class IngestionService {
       buffer.push(record);
 
       if (buffer.length >= this.BATCH_SIZE) {
+        console.log(`[INGESTION] User batch insert: ${buffer.length} records (total so far: ${total})`);
         await UserTransaction.insertMany(buffer);
         buffer.length = 0; 
       }
@@ -208,6 +216,7 @@ export class IngestionService {
       buffer.push(record);
 
       if (buffer.length >= this.BATCH_SIZE) {
+        console.log(`[INGESTION] Exchange batch insert: ${buffer.length} records (total so far: ${total})`);
         await ExchangeTransaction.insertMany(buffer);
         buffer.length = 0; 
       }

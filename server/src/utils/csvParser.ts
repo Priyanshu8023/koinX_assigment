@@ -1,38 +1,48 @@
 import fs from 'fs';
 import csv from 'csv-parser';
+import { Readable } from 'stream';
 
-/**
- * Streams a CSV file line-by-line, invoking the callback for each row.
- * Handles stream backpressure by pausing/resuming during asynchronous callbacks.
- */
 export function parseCSVStream(
-  filePath: string,
+  source: string | Readable,
   onRow: (row: any, rowNumber: number) => Promise<void>
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (!fs.existsSync(filePath)) {
-      return reject(new Error(`File not found at path: ${filePath}`));
+    let stream: Readable;
+
+    if (source instanceof Readable) {
+      stream = source;
+    } else if (typeof source === 'string') {
+      const isFilePath = source.length < 260 && !source.includes('\n') && fs.existsSync(source);
+      if (isFilePath) {
+        stream = fs.createReadStream(source);
+      } else {
+        stream = Readable.from(source);
+      }
+    } else {
+      return reject(new Error('Invalid CSV source type'));
     }
 
-    const readStream = fs.createReadStream(filePath);
-    const parser = readStream.pipe(csv());
+    const parser = stream.pipe(csv());
     let rowNumber = 0;
 
     parser.on('data', async (row) => {
       rowNumber++;
       
-       
       parser.pause();
-      readStream.pause();
+      if ('pause' in stream && typeof stream.pause === 'function') {
+        stream.pause();
+      }
 
       try {
         await onRow(row, rowNumber);
         
         parser.resume();
-        readStream.resume();
+        if ('resume' in stream && typeof stream.resume === 'function') {
+          stream.resume();
+        }
       } catch (error) {
         parser.destroy();
-        readStream.destroy();
+        stream.destroy();
         reject(error);
       }
     });

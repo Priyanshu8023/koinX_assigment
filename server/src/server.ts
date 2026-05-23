@@ -18,7 +18,7 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '20mb' }));
 app.use(rateLimiter);
 
 app.use('/api', reconciliationRoutes);

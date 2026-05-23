@@ -12,17 +12,31 @@ export async function triggerReconciliation(
   next: NextFunction
 ): Promise<void> {
   try {
-    const userFilePath = path.resolve('../data/user_transactions.csv');
-    const exchangeFilePath = path.resolve('../data/exchange_transactions.csv');
+    const userCsvContent = req.body?.userCsvContent;
+    const exchangeCsvContent = req.body?.exchangeCsvContent;
 
-    if (!fs.existsSync(userFilePath) || !fs.existsSync(exchangeFilePath)) {
-      res.status(400).json({
-        title: 'Missing Source CSV Files',
-        status: 400,
-        detail: 'Reconciliation ledgers are missing. Please ensure user_transactions.csv and exchange_transactions.csv exist in the data folder.',
-        instance: req.originalUrl
-      });
-      return;
+    const userSource = userCsvContent || path.resolve('../data/user_transactions.csv');
+    const exchangeSource = exchangeCsvContent || path.resolve('../data/exchange_transactions.csv');
+
+    if (!userCsvContent || !exchangeCsvContent) {
+      if (typeof userSource === 'string' && !fs.existsSync(userSource)) {
+        res.status(400).json({
+          title: 'Missing Source CSV Files',
+          status: 400,
+          detail: 'Reconciliation ledgers are missing. Please ensure user_transactions.csv exists in the data folder or upload it.',
+          instance: req.originalUrl
+        });
+        return;
+      }
+      if (typeof exchangeSource === 'string' && !fs.existsSync(exchangeSource)) {
+        res.status(400).json({
+          title: 'Missing Source CSV Files',
+          status: 400,
+          detail: 'Reconciliation ledgers are missing. Please ensure exchange_transactions.csv exists in the data folder or upload it.',
+          instance: req.originalUrl
+        });
+        return;
+      }
     }
 
     const timestampToleranceSec = Number(req.body?.timestampToleranceSec) || 
@@ -43,7 +57,7 @@ export async function triggerReconciliation(
     });
     await run.save();
 
-    await IngestionService.ingestFiles(runId, userFilePath, exchangeFilePath);
+    await IngestionService.ingestFiles(runId, userSource, exchangeSource);
 
     await MatchingEngine.matchTransactions(runId);
 

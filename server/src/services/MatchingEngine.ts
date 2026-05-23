@@ -17,8 +17,12 @@ export class MatchingEngine {
     const config = run.config;
 
     try {
-      const userTxs = await UserTransaction.find({ runId, isValid: true, isDuplicate: false }).lean();
-      const exchangeTxs = await ExchangeTransaction.find({ runId, isValid: true, isDuplicate: false }).lean();
+      const userTxs = await UserTransaction.find({ runId, isValid: true, isDuplicate: false })
+        .sort({ timestamp: 1 })
+        .lean();
+      const exchangeTxs = await ExchangeTransaction.find({ runId, isValid: true, isDuplicate: false })
+        .sort({ timestamp: 1 })
+        .lean();
 
       const exchangeIndex = new Map<string, any[]>();
       for (const tx of exchangeTxs) {

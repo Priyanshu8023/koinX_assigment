@@ -4,7 +4,6 @@ import fs from 'fs';
 import ReconciliationRun from '../models/ReconciliationRun.js';
 import { IngestionService } from '../services/IngestionService.js';
 import { MatchingEngine } from '../services/MatchingEngine.js';
-import { ReportService } from '../services/ReportService.js';
 import { DEFAULT_TOLERANCES } from '../config/constants.js';
 
 export async function triggerReconciliation(
@@ -48,14 +47,10 @@ export async function triggerReconciliation(
 
     await MatchingEngine.matchTransactions(runId);
 
-    const summaryData = await ReportService.getRunSummary(runId);
-
     res.status(201).json({
       success: true,
       runId,
-      config: summaryData.config,
-      summary: summaryData.summary,
-      status: summaryData.status
+      status: 'completed'
     });
 
   } catch (error) {

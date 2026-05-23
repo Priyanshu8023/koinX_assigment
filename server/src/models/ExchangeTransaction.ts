@@ -61,7 +61,7 @@ const ExchangeTransactionSchema = new Schema<IExchangeTransaction>({
 });
 
 ExchangeTransactionSchema.index({ runId: 1, asset: 1, type: 1, timestamp: 1 });
-ExchangeTransactionSchema.index({ runId: 1, isValid: 1, isDuplicate: 1 });
+ExchangeTransactionSchema.index({ runId: 1, isValid: 1, isDuplicate: 1, timestamp: 1 });
 
 const ExchangeTransaction = mongoose.model<IExchangeTransaction>('ExchangeTransaction', ExchangeTransactionSchema);
 export default ExchangeTransaction;

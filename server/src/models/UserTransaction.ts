@@ -63,7 +63,7 @@ const UserTransactionSchema = new Schema<IUserTransaction>({
 });
 
 UserTransactionSchema.index({ runId: 1, asset: 1, type: 1, timestamp: 1 });
-UserTransactionSchema.index({ runId: 1, isValid: 1, isDuplicate: 1 });
+UserTransactionSchema.index({ runId: 1, isValid: 1, isDuplicate: 1, timestamp: 1 });
 
 const UserTransaction = mongoose.model<IUserTransaction>('UserTransaction', UserTransactionSchema);
 export default UserTransaction;

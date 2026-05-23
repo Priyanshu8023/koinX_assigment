@@ -196,6 +196,33 @@ interface ReconciliationResultRow {
   };
 }
 
+const TableSkeleton = () => {
+  return (
+    <div className="w-full divide-y divide-brand-border/40 animate-pulse">
+      {[1, 2, 3, 4, 5, 6].map(i => (
+        <div key={i} className="py-4 px-6 grid grid-cols-5 gap-4">
+          <div className="flex flex-col gap-2">
+            <div className="h-4 bg-slate-800/80 rounded w-3/4"></div>
+            <div className="h-2.5 bg-slate-900/50 rounded w-1/2"></div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="h-4 bg-slate-800/80 rounded w-2/3"></div>
+            <div className="h-2.5 bg-slate-900/50 rounded w-1/3"></div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="h-4 bg-slate-800/80 rounded w-5/6"></div>
+            <div className="h-2.5 bg-slate-900/50 rounded w-1/2"></div>
+          </div>
+          <div className="flex justify-center items-center">
+            <div className="h-5 bg-slate-800/80 rounded-full w-16"></div>
+          </div>
+          <div className="h-4 bg-slate-800/80 rounded w-11/12"></div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function Home() {
 
   const [runId, setRunId] = useState<string>('');
@@ -223,6 +250,9 @@ export default function Home() {
   const [exchangeFile, setExchangeFile] = useState<File | null>(null);
   const [useDefaultFiles, setUseDefaultFiles] = useState<boolean>(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(true);
+  const [modalTab, setModalTab] = useState<'new' | 'load'>('load');
+  const [inputRunId, setInputRunId] = useState<string>('');
+  const [isLoadingExistingRun, setIsLoadingExistingRun] = useState<boolean>(false);
 
 
   useEffect(() => {
@@ -248,22 +278,33 @@ export default function Home() {
       setIsLoadingReport(true);
       setErrorMsg(null);
       try {
-        const queryParams = new URLSearchParams({
-          page: String(page),
-          limit: String(limit),
-          ...(activeCategoryFilter ? { category: activeCategoryFilter } : {})
-        });
+        if (activeCategoryFilter === 'unmatched') {
+          const res = await fetch(`${BACKEND_URL}/api/report/${runId}/unmatched`);
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || 'Failed to fetch unmatched records.');
+          }
+          const data = await res.json();
+          setReportRows(data.unmatched || []);
+          setTotalPages(1);
+        } else {
+          const queryParams = new URLSearchParams({
+            page: String(page),
+            limit: String(limit),
+            ...(activeCategoryFilter ? { category: activeCategoryFilter } : {})
+          });
 
-        const res = await fetch(`${BACKEND_URL}/api/report/${runId}?${queryParams.toString()}`);
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || 'Failed to fetch report.');
-        }
+          const res = await fetch(`${BACKEND_URL}/api/report/${runId}?${queryParams.toString()}`);
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || 'Failed to fetch report.');
+          }
 
-        const data = await res.json();
-        setReportRows(data.results || []);
-        if (data.pagination) {
-          setTotalPages(data.pagination.pages || 1);
+          const data = await res.json();
+          setReportRows(data.results || []);
+          if (data.pagination) {
+            setTotalPages(data.pagination.pages || 1);
+          }
         }
       } catch (err: any) {
         setErrorMsg(err.message);
@@ -342,6 +383,31 @@ export default function Home() {
     }
   };
 
+  const handleLoadExistingRun = async () => {
+    if (!inputRunId.trim()) return;
+    setIsLoadingExistingRun(true);
+    setErrorMsg(null);
+    try {
+      const summaryRes = await fetch(`${BACKEND_URL}/api/report/${inputRunId.trim()}/summary`);
+      if (!summaryRes.ok) {
+        const errData = await summaryRes.json();
+        throw new Error(errData.detail || 'Reconciliation run ID not found or server error.');
+      }
+      
+      const summaryData = await summaryRes.json();
+      setRunId(inputRunId.trim());
+      setStatus(summaryData.status || 'completed');
+      setSummary(summaryData.summary);
+      setConfig(summaryData.config);
+      
+      setIsUploadModalOpen(false);
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setIsLoadingExistingRun(false);
+    }
+  };
+
 
   const handleDownloadCSV = () => {
     if (!runId) return;
@@ -351,6 +417,15 @@ export default function Home() {
   const formatCurrency = (val: number | undefined) => {
     if (val === undefined || val === null) return '-';
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+  };
+
+  const formatFee = (val: number | undefined, asset: string | undefined) => {
+    if (val === undefined || val === null) return '-';
+    const formattedVal = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6
+    }).format(val);
+    return asset ? `${formattedVal} ${asset}` : formattedVal;
   };
 
   const filteredRows = reportRows.filter(row => {
@@ -523,8 +598,7 @@ export default function Home() {
                   { label: 'All Records', value: '' },
                   { label: 'Perfect Matches', value: 'matched' },
                   { label: 'Conflicts', value: 'conflicting' },
-                  { label: 'Unmatched User', value: 'unmatched_user' },
-                  { label: 'Unmatched Exchange', value: 'unmatched_exchange' }
+                  { label: 'Unmatched Only', value: 'unmatched' }
                 ].map((tab) => (
                   <button
                     key={tab.value}
@@ -545,9 +619,7 @@ export default function Home() {
 
               <div className="overflow-x-auto relative flex-1 min-h-[350px]">
                 {isLoadingReport ? (
-                  <div className="absolute inset-0 bg-brand-dark/50 backdrop-blur-sm flex items-center justify-center z-10">
-                    <RefreshCw className="h-8 w-8 text-indigo-400 animate-spin" />
-                  </div>
+                  <TableSkeleton />
                 ) : filteredRows.length === 0 ? (
                   <div className="p-16 flex flex-col items-center justify-center text-center gap-3">
                     <AlertCircle className="h-10 w-10 text-slate-600" />
@@ -570,8 +642,8 @@ export default function Home() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-brand-border">
-                      {filteredRows.map((row) => (
-                        <tr key={row._id} className="hover:bg-slate-900/30 transition-all">
+                      {filteredRows.map((row, idx) => (
+                        <tr key={row._id || `${idx}-${row.userTransaction?.transactionId || ''}-${row.exchangeTransaction?.transactionId || ''}`} className="hover:bg-slate-900/30 transition-all">
                           
                           <td className="py-4 px-4 align-top">
                             {row.userTransaction ? (
@@ -640,9 +712,9 @@ export default function Home() {
                                     Fee Compare {row.matchDetails?.fieldsCompared.fee.match === false && '(!)'}
                                   </span>
                                   <div className="flex items-center gap-1 mt-0.5">
-                                    <span className="text-slate-300 font-medium">{formatCurrency(row.userTransaction?.fee)}</span>
+                                    <span className="text-slate-300 font-medium">{formatFee(row.userTransaction?.fee, row.userTransaction?.asset)}</span>
                                     <span className="text-slate-500">|</span>
-                                    <span className="text-slate-300 font-medium">{formatCurrency(row.exchangeTransaction?.fee)}</span>
+                                    <span className="text-slate-300 font-medium">{formatFee(row.exchangeTransaction?.fee, row.exchangeTransaction?.asset)}</span>
                                   </div>
                                 </div>
 
@@ -777,88 +849,155 @@ export default function Home() {
               <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl flex items-start gap-2.5 shadow-lg shadow-rose-500/5 animate-shake">
                 <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div className="text-xs">
-                  <span className="font-bold">Reconciliation Failed:</span> {errorMsg}
+                  <span className="font-bold">Error:</span> {errorMsg}
                 </div>
               </div>
             )}
 
+            {/* Modal Tabs */}
+            <div className="flex border-b border-slate-800/80 -mt-2">
+              <button
+                type="button"
+                onClick={() => { setModalTab('new'); setErrorMsg(null); }}
+                className={`flex-1 pb-3 text-xs font-bold transition-all text-center border-b-2 cursor-pointer ${
+                  modalTab === 'new'
+                    ? 'border-indigo-500 text-indigo-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                New Run
+              </button>
+              <button
+                type="button"
+                onClick={() => { setModalTab('load'); setErrorMsg(null); }}
+                className={`flex-1 pb-3 text-xs font-bold transition-all text-center border-b-2 cursor-pointer ${
+                  modalTab === 'load'
+                    ? 'border-indigo-500 text-indigo-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Load Existing Run
+              </button>
+            </div>
+
             {/* Modal Body - Single Column */}
             <div className="flex flex-col gap-5">
-              
-              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-950/30 border border-slate-800/80 hover:border-slate-700/80 transition-all animate-fadeIn">
-                <input
-                  type="checkbox"
-                  id="modal-use-defaults"
-                  checked={useDefaultFiles}
-                  onChange={(e) => {
-                    setUseDefaultFiles(e.target.checked);
-                    if (e.target.checked) {
-                      setErrorMsg(null);
-                    }
-                  }}
-                  className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20 h-5.5 w-5.5 cursor-pointer mt-0.5"
-                />
-                <div className="flex flex-col gap-0.5">
-                  <label htmlFor="modal-use-defaults" className="text-xs font-bold text-slate-200 cursor-pointer select-none">
-                    Use default system files
-                  </label>
-                  <span className="text-[10px] text-slate-500 leading-normal">
-                    Toggle this on to run the reconciler using preloaded dummy user/exchange transaction datasets on the backend without uploading files.
-                  </span>
-                </div>
-              </div>
-
-              {!useDefaultFiles ? (
+              {modalTab === 'load' ? (
                 <div className="flex flex-col gap-4 animate-fadeIn">
-                  <FileDropzone
-                    label="User Ledger CSV"
-                    file={userFile}
-                    onFileSelect={setUserFile}
-                    disabled={isReconciling}
-                  />
-                  <FileDropzone
-                    label="Exchange Ledger CSV"
-                    file={exchangeFile}
-                    onFileSelect={setExchangeFile}
-                    disabled={isReconciling}
-                  />
+                  <div className="flex flex-col gap-1.5 w-full text-left">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                      Reconciliation Run ID
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. RUN-001"
+                      value={inputRunId}
+                      onChange={(e) => setInputRunId(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs font-medium text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500 transition-all animate-fadeIn"
+                      disabled={isLoadingExistingRun}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLoadExistingRun}
+                    disabled={isLoadingExistingRun || !inputRunId.trim()}
+                    className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2 transition-all ${
+                      isLoadingExistingRun || !inputRunId.trim()
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-blue-400 hover:scale-[1.01] cursor-pointer'
+                    }`}
+                  >
+                    {isLoadingExistingRun ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Verifying Run ID...
+                      </>
+                    ) : (
+                      <>
+                        <Layers className="h-4 w-4" />
+                        Load Run Dashboard
+                      </>
+                    )}
+                  </button>
                 </div>
               ) : (
-                <div className="flex items-center justify-center p-6 rounded-xl bg-slate-950/20 border border-slate-800/80 text-[11px] text-slate-400 leading-normal text-center min-h-[140px] animate-fadeIn">
-                  <div>
-                    <Database className="h-8 w-8 text-indigo-400/50 mx-auto mb-2 animate-pulse" />
-                    Running in <b>demo mode</b>.<br />Reconciler will read sample ledger datasets pre-loaded on the server.
+                <>
+                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-950/30 border border-slate-800/80 hover:border-slate-700/80 transition-all animate-fadeIn">
+                    <input
+                      type="checkbox"
+                      id="modal-use-defaults"
+                      checked={useDefaultFiles}
+                      onChange={(e) => {
+                        setUseDefaultFiles(e.target.checked);
+                        if (e.target.checked) {
+                          setErrorMsg(null);
+                        }
+                      }}
+                      className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20 h-5.5 w-5.5 cursor-pointer mt-0.5"
+                    />
+                    <div className="flex flex-col gap-0.5">
+                      <label htmlFor="modal-use-defaults" className="text-xs font-bold text-slate-200 cursor-pointer select-none">
+                        Use default system files
+                      </label>
+                      <span className="text-[10px] text-slate-500 leading-normal">
+                        Toggle this on to run the reconciler using preloaded dummy user/exchange transaction datasets on the backend without uploading files.
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
 
-              <div className="flex flex-col gap-2 mt-2">
-                <button
-                  onClick={handleTriggerReconcile}
-                  disabled={isReconciling || isServerUp === false}
-                  className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2 transition-all ${
-                    isReconciling || isServerUp === false
-                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-blue-400 hover:scale-[1.01] hover:shadow-indigo-500/10 cursor-pointer'
-                  }`}
-                >
-                  {isReconciling ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Executing Matching...
-                    </>
+                  {!useDefaultFiles ? (
+                    <div className="flex flex-col gap-4 animate-fadeIn">
+                      <FileDropzone
+                        label="User Ledger CSV"
+                        file={userFile}
+                        onFileSelect={setUserFile}
+                        disabled={isReconciling}
+                      />
+                      <FileDropzone
+                        label="Exchange Ledger CSV"
+                        file={exchangeFile}
+                        onFileSelect={setExchangeFile}
+                        disabled={isReconciling}
+                      />
+                    </div>
                   ) : (
-                    <>
-                      <Play className="h-4 w-4 fill-current" />
-                      Start Reconciliation
-                    </>
+                    <div className="flex items-center justify-center p-6 rounded-xl bg-slate-950/20 border border-slate-800/80 text-[11px] text-slate-400 leading-normal text-center min-h-[140px] animate-fadeIn">
+                      <div>
+                        <Database className="h-8 w-8 text-indigo-400/50 mx-auto mb-2 animate-pulse" />
+                        Running in <b>demo mode</b>.<br />Reconciler will read sample ledger datasets pre-loaded on the server.
+                      </div>
+                    </div>
                   )}
-                </button>
-                <p className="text-[10px] text-center text-slate-500 font-medium leading-normal">
-                  * Check <b>"Use default system files"</b> above to run with demo data.
-                </p>
-              </div>
 
+                  <div className="flex flex-col gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={handleTriggerReconcile}
+                      disabled={isReconciling || isServerUp === false}
+                      className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2 transition-all ${
+                        isReconciling || isServerUp === false
+                          ? 'bg-slate-850 text-slate-500 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-blue-400 hover:scale-[1.01] hover:shadow-indigo-500/10 cursor-pointer'
+                      }`}
+                    >
+                      {isReconciling ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Executing Matching...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 fill-current" />
+                          Start Reconciliation
+                        </>
+                      )}
+                    </button>
+                    <p className="text-[10px] text-center text-slate-500 font-medium leading-normal">
+                      * Check <b>"Use default system files"</b> above to run with demo data.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
           </div>

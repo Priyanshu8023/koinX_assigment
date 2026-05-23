@@ -32,7 +32,6 @@ export function rateLimiter(
   
   if (record.count > MAX_REQUESTS) {
     res.status(429).json({
-      type: 'about:blank',
       title: 'Too Many Requests',
       status: 429,
       detail: `Rate limit exceeded. Please wait ${Math.ceil((record.resetTime - now) / 1000)} seconds before trying again.`,

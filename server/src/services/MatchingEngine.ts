@@ -5,27 +5,21 @@ import ReconciliationResult, { IReconciliationResult } from '../models/Reconcili
 import { TYPE_EQUIVALENCES } from '../config/constants.js';
 
 export class MatchingEngine {
-  /**
-   * Performs reconciliation matching on all valid, non-duplicate transactions for a run.
-   */
   public static async matchTransactions(runId: string): Promise<void> {
     const run = await ReconciliationRun.findOne({ runId });
     if (!run) {
       throw new Error(`Reconciliation run not found: ${runId}`);
     }
 
-    // Update status to processing
     run.status = 'processing';
     await run.save();
 
     const config = run.config;
 
     try {
-      // 1. Fetch clean transactions using .lean() for speed and low memory footprint
       const userTxs = await UserTransaction.find({ runId, isValid: true, isDuplicate: false }).lean();
       const exchangeTxs = await ExchangeTransaction.find({ runId, isValid: true, isDuplicate: false }).lean();
 
-      // 2. Build index of exchange transactions by asset & type for O(1) candidate lookup
       const exchangeIndex = new Map<string, any[]>();
       for (const tx of exchangeTxs) {
         const key = `${tx.asset}_${tx.type}`;
@@ -35,7 +29,7 @@ export class MatchingEngine {
         exchangeIndex.get(key)!.push(tx);
       }
 
-      // Sort candidate groups by timestamp to ensure chronological comparisons
+
       for (const group of exchangeIndex.values()) {
         group.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
       }
@@ -44,7 +38,6 @@ export class MatchingEngine {
       const matchedExchangeIds = new Set<string>();
       const matchedUserIds = new Set<string>();
 
-      // 3. Reconcile user transactions
       for (const userTx of userTxs) {
         const equivalentType = TYPE_EQUIVALENCES[userTx.type || ''];
         if (!equivalentType) continue;
@@ -57,19 +50,17 @@ export class MatchingEngine {
         for (const candidate of candidates) {
           if (matchedExchangeIds.has(candidate._id.toString())) continue;
 
-          // Time validation
+          
           const userTime = userTx.timestamp ? userTx.timestamp.getTime() : 0;
           const exchangeTime = candidate.timestamp ? candidate.timestamp.getTime() : 0;
           const timeDiffSec = Math.abs(userTime - exchangeTime) / 1000;
           if (timeDiffSec > config.timestampToleranceSec) continue;
 
-          // Quantity validation
           if (!userTx.quantity || !candidate.quantity) continue;
           const qtyDiff = Math.abs(userTx.quantity - candidate.quantity);
           const qtyDiffPct = (qtyDiff / userTx.quantity) * 100;
           if (qtyDiffPct > config.quantityTolerancePct) continue;
 
-          // Proximity Score (lower is closer / better)
           const timeRatio = timeDiffSec / config.timestampToleranceSec;
           const qtyRatio = qtyDiffPct / config.quantityTolerancePct;
           const score = (timeRatio * 0.5) + (qtyRatio * 0.5);
@@ -77,7 +68,6 @@ export class MatchingEngine {
           validCandidates.push({ tx: candidate, timeDiffSec, qtyDiffPct, score });
         }
 
-        // If candidates exist, sort by score ascending and match the best one
         if (validCandidates.length > 0) {
           validCandidates.sort((a, b) => a.score - b.score);
           const best = validCandidates[0];
@@ -85,7 +75,6 @@ export class MatchingEngine {
           matchedExchangeIds.add(best.tx._id.toString());
           matchedUserIds.add(userTx._id.toString());
 
-          // Check if there are field conflicts (price or fee mismatch)
           const priceMatch = userTx.priceUsd === best.tx.priceUsd;
           const feeMatch = userTx.fee === best.tx.fee;
           
@@ -95,7 +84,6 @@ export class MatchingEngine {
             ? `Matched within tolerances, but has conflicts: ${!priceMatch ? 'Price mismatch. ' : ''}${!feeMatch ? 'Fee mismatch.' : ''}`
             : 'Perfect match within tolerances';
 
-          // Build comparison details
           const matchDetails = {
             timestampDiffSec: best.timeDiffSec,
             quantityDiffPct: best.qtyDiffPct,
@@ -120,7 +108,6 @@ export class MatchingEngine {
         }
       }
 
-      // 4. Create results for unmatched user transactions
       for (const userTx of userTxs) {
         if (!matchedUserIds.has(userTx._id.toString())) {
           results.push({
@@ -134,7 +121,6 @@ export class MatchingEngine {
         }
       }
 
-      // 5. Create results for unmatched exchange transactions
       for (const exchangeTx of exchangeTxs) {
         if (!matchedExchangeIds.has(exchangeTx._id.toString())) {
           results.push({
@@ -148,12 +134,9 @@ export class MatchingEngine {
         }
       }
 
-      // 6. Bulk write reconciliation results
       if (results.length > 0) {
         await ReconciliationResult.insertMany(results);
       }
-
-      // 7. Update ReconciliationRun summary statistics
       const matchedCount = results.filter(r => r.category === 'matched').length;
       const conflictingCount = results.filter(r => r.category === 'conflicting').length;
       const unmatchedUserCount = results.filter(r => r.category === 'unmatched_user').length;

@@ -33,6 +33,15 @@ export class MatchingEngine {
         exchangeIndex.get(key)!.push(tx);
       }
 
+      const userIndex = new Map<string, any[]>();
+      for (const tx of userTxs) {
+        const key = `${tx.asset}_${tx.type}`;
+        if (!userIndex.has(key)) {
+          userIndex.set(key, []);
+        }
+        userIndex.get(key)!.push(tx);
+      }
+
 
       for (const group of exchangeIndex.values()) {
         group.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
@@ -114,10 +123,13 @@ export class MatchingEngine {
 
       for (const userTx of userTxs) {
         if (!matchedUserIds.has(userTx._id.toString())) {
+          const equivalentType = TYPE_EQUIVALENCES[userTx.type || ''];
+          const candidates = exchangeIndex.get(`${userTx.asset}_${equivalentType}`) || [];
+          const reason = MatchingEngine.getUnmatchedDiagnosticReason(userTx, candidates, config, 'user');
           results.push({
             runId,
             category: 'unmatched_user',
-            reason: 'No equivalent exchange transaction found within tolerances',
+            reason,
             userTransaction: userTx,
             exchangeTransaction: null,
             matchDetails: null
@@ -127,10 +139,13 @@ export class MatchingEngine {
 
       for (const exchangeTx of exchangeTxs) {
         if (!matchedExchangeIds.has(exchangeTx._id.toString())) {
+          const equivalentType = TYPE_EQUIVALENCES[exchangeTx.type || ''];
+          const candidates = userIndex.get(`${exchangeTx.asset}_${equivalentType}`) || [];
+          const reason = MatchingEngine.getUnmatchedDiagnosticReason(exchangeTx, candidates, config, 'exchange');
           results.push({
             runId,
             category: 'unmatched_exchange',
-            reason: 'No equivalent user transaction found within tolerances',
+            reason,
             userTransaction: null,
             exchangeTransaction: exchangeTx,
             matchDetails: null
@@ -171,5 +186,82 @@ export class MatchingEngine {
       await run.save();
       throw error;
     }
+  }
+
+  private static getUnmatchedDiagnosticReason(
+    tx: any,
+    candidates: any[],
+    config: { timestampToleranceSec: number; quantityTolerancePct: number },
+    perspective: 'user' | 'exchange'
+  ): string {
+    const peerPerspective = perspective === 'user' ? 'exchange' : 'user';
+    const targetType = TYPE_EQUIVALENCES[tx.type || ''];
+
+    if (candidates.length === 0) {
+      return `No transactions found in ${peerPerspective} ledger for asset ${tx.asset} and type ${targetType}.`;
+    }
+
+    let minTimeDiff: number | null = null;
+    let minQtyDiffPct: number | null = null;
+
+    for (const candidate of candidates) {
+      const txTime = tx.timestamp ? tx.timestamp.getTime() : 0;
+      const candidateTime = candidate.timestamp ? candidate.timestamp.getTime() : 0;
+      const timeDiffSec = Math.abs(txTime - candidateTime) / 1000;
+
+      if (minTimeDiff === null || timeDiffSec < minTimeDiff) {
+        minTimeDiff = timeDiffSec;
+      }
+
+      if (tx.quantity && candidate.quantity) {
+        const qtyDiff = Math.abs(tx.quantity - candidate.quantity);
+        const qtyDiffPct = (qtyDiff / tx.quantity) * 100;
+        if (minQtyDiffPct === null || qtyDiffPct < minQtyDiffPct) {
+          minQtyDiffPct = qtyDiffPct;
+        }
+      }
+    }
+
+    // Case 1: Time-proximate candidates exist, but quantity is out of bounds
+    const timeProximateCandidates = candidates.filter(c => {
+      const txTime = tx.timestamp ? tx.timestamp.getTime() : 0;
+      const candidateTime = c.timestamp ? c.timestamp.getTime() : 0;
+      return (Math.abs(txTime - candidateTime) / 1000) <= config.timestampToleranceSec;
+    });
+
+    if (timeProximateCandidates.length > 0) {
+      let bestQtyDiff: number | null = null;
+      for (const c of timeProximateCandidates) {
+        const qtyDiff = Math.abs(tx.quantity - c.quantity);
+        const qtyDiffPct = (qtyDiff / tx.quantity) * 100;
+        if (bestQtyDiff === null || qtyDiffPct < bestQtyDiff) {
+          bestQtyDiff = qtyDiffPct;
+        }
+      }
+      return `Time-proximate ${peerPerspective} transactions exist, but quantity difference exceeds tolerance (closest diff: ${bestQtyDiff?.toFixed(2)}%, tolerance: ${config.quantityTolerancePct}%).`;
+    }
+
+    // Case 2: Quantity-proximate candidates exist, but timestamp is out of bounds
+    const qtyProximateCandidates = candidates.filter(c => {
+      const qtyDiff = Math.abs(tx.quantity - c.quantity);
+      const qtyDiffPct = (qtyDiff / tx.quantity) * 100;
+      return qtyDiffPct <= config.quantityTolerancePct;
+    });
+
+    if (qtyProximateCandidates.length > 0) {
+      let bestTimeDiff: number | null = null;
+      for (const c of qtyProximateCandidates) {
+        const txTime = tx.timestamp ? tx.timestamp.getTime() : 0;
+        const candidateTime = c.timestamp ? c.timestamp.getTime() : 0;
+        const timeDiffSec = Math.abs(txTime - candidateTime) / 1000;
+        if (bestTimeDiff === null || timeDiffSec < bestTimeDiff) {
+          bestTimeDiff = timeDiffSec;
+        }
+      }
+      return `Quantity-matched ${peerPerspective} transactions exist, but time difference exceeds tolerance (closest diff: ${bestTimeDiff}s, tolerance: ${config.timestampToleranceSec}s).`;
+    }
+
+    // Case 3: Both out of bounds
+    return `Closest candidate found in ${peerPerspective} ledger is outside tolerance bounds (time diff: ${minTimeDiff}s / tol: ${config.timestampToleranceSec}s, qty diff: ${minQtyDiffPct?.toFixed(2)}% / tol: ${config.quantityTolerancePct}%).`;
   }
 }

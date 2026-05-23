@@ -19,7 +19,7 @@ import {
   XCircle
 } from 'lucide-react';
 
-const BACKEND_URL = 'http://localhost:3000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
 interface SummaryData {
   matched: number;
@@ -74,33 +74,28 @@ interface ReconciliationResultRow {
 }
 
 export default function Home() {
-  // Application State
+
   const [runId, setRunId] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [config, setConfig] = useState<RunConfig>({ timestampToleranceSec: 300, quantityTolerancePct: 0.01 });
   const [summary, setSummary] = useState<SummaryData | null>(null);
   
-  // Table Data & Filters
   const [reportRows, setReportRows] = useState<ReconciliationResultRow[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('');
   
-  // Pagination
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [limit] = useState<number>(10); // Display 10 per page on UI for compactness
+  const [limit] = useState<number>(10); 
   
-  // Loading & Error States
   const [isServerUp, setIsServerUp] = useState<boolean | null>(null);
   const [isReconciling, setIsReconciling] = useState<boolean>(false);
   const [isLoadingReport, setIsLoadingReport] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Form State
   const [formTimestampTolerance, setFormTimestampTolerance] = useState<number>(300);
   const [formQuantityTolerance, setFormQuantityTolerance] = useState<number>(0.01);
 
-  // Checks Server Health on Load
   useEffect(() => {
     async function checkHealth() {
       try {
@@ -117,7 +112,6 @@ export default function Home() {
     checkHealth();
   }, []);
 
-  // Fetch Report Data whenever page, category filter, or runId changes
   useEffect(() => {
     if (!runId) return;
 
@@ -152,7 +146,6 @@ export default function Home() {
     fetchReport();
   }, [runId, page, activeCategoryFilter, limit]);
 
-  // Handle new reconciliation request
   const handleTriggerReconcile = async () => {
     setIsReconciling(true);
     setErrorMsg(null);
@@ -179,7 +172,6 @@ export default function Home() {
       setRunId(runInfo.runId);
       setStatus(runInfo.status);
 
-      // Fetch summary statistics
       const summaryRes = await fetch(`${BACKEND_URL}/api/report/${runInfo.runId}/summary`);
       if (summaryRes.ok) {
         const summaryData = await summaryRes.json();
@@ -193,19 +185,16 @@ export default function Home() {
     }
   };
 
-  // Helper to open CSV download attachment in a new browser tab/window
   const handleDownloadCSV = () => {
     if (!runId) return;
     window.open(`${BACKEND_URL}/api/report/${runId}?format=csv`, '_blank');
   };
 
-  // Format Helper for Currency
   const formatCurrency = (val: number | undefined) => {
     if (val === undefined || val === null) return '-';
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
   };
 
-  // Filter rows based on search input
   const filteredRows = reportRows.filter(row => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
@@ -219,14 +208,13 @@ export default function Home() {
     return userTxId.includes(q) || exchangeTxId.includes(q) || userAsset.includes(q) || exchangeAsset.includes(q) || reason.includes(q);
   });
 
-  // Calculate Match Success Rate
   const matchRate = summary && summary.totalProcessed > 0
     ? Math.round(((summary.matched + summary.conflicting) / (summary.totalProcessed - summary.unmatchedExchange)) * 100)
     : 0;
 
   return (
     <div className="min-h-screen bg-brand-dark text-slate-100 flex flex-col">
-      {/* Header Bar */}
+      
       <header className="border-b border-brand-border py-4 px-6 md:px-12 flex items-center justify-between bg-slate-950/60 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-xl shadow-lg shadow-indigo-500/20">
@@ -240,7 +228,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Server Connection Status */}
         <div className="flex items-center gap-2">
           {isServerUp === true && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -260,7 +247,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Error Alert Bar */}
       {errorMsg && (
         <div className="mx-6 md:mx-12 mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl flex items-start gap-3 shadow-lg shadow-rose-500/5">
           <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
@@ -271,10 +257,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Main Grid View */}
       <main className="flex-1 p-6 md:p-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
         
-        {/* Left Control Dashboard */}
         <section className="lg:col-span-1 flex flex-col gap-6">
           <div className="glass-panel p-6 rounded-2xl flex flex-col gap-5 shadow-2xl">
             <div className="flex items-center gap-2 border-b border-brand-border pb-3">
@@ -282,7 +266,6 @@ export default function Home() {
               <h3 className="font-bold text-sm uppercase tracking-wider text-slate-300">Run Control Panel</h3>
             </div>
 
-            {/* Tolerances Form */}
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">
@@ -341,7 +324,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Quick Config Details */}
           {summary && (
             <div className="glass-panel p-6 rounded-2xl flex flex-col gap-3 shadow-xl">
               <h3 className="font-bold text-xs uppercase tracking-wider text-slate-400 border-b border-brand-border pb-2">Active Config</h3>
@@ -359,16 +341,14 @@ export default function Home() {
           )}
         </section>
 
-        {/* Right Output Dashboard */}
         <section className="lg:col-span-3 flex flex-col gap-6">
 
-          {/* Active Run Overview (Only shown when a run is active) */}
           {runId ? (
             <>
-              {/* Metrics Grid */}
+              
               {summary ? (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {/* Match Rate Card */}
+                  
                   <div className="glass-panel p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-indigo-500 shadow-xl">
                     <div>
                       <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Match Success Rate</span>
@@ -380,7 +360,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Perfect Matches Card */}
                   <div className="glass-panel p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-emerald-500 shadow-xl">
                     <div>
                       <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Perfect Matches</span>
@@ -392,7 +371,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Conflicts Card */}
                   <div className="glass-panel p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-amber-500 shadow-xl">
                     <div>
                       <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Discrepancy Conflicts</span>
@@ -404,7 +382,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Unmatched Card */}
                   <div className="glass-panel p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-rose-500 shadow-xl">
                     <div>
                       <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Unmatched Items</span>
@@ -427,9 +404,8 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Data Table Section */}
               <div className="glass-panel rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-                {/* Table Header Bar */}
+                
                 <div className="p-6 border-b border-brand-border flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950/40">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2.5">
@@ -440,7 +416,7 @@ export default function Home() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
-                    {/* Search Field */}
+                    
                     <div className="flex items-center bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2 w-full md:w-64">
                       <Search className="h-4 w-4 text-slate-500 mr-2 flex-shrink-0" />
                       <input 
@@ -452,7 +428,6 @@ export default function Home() {
                       />
                     </div>
 
-                    {/* Download Button */}
                     <button
                       onClick={handleDownloadCSV}
                       className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5 border border-slate-700 transition-all cursor-pointer"
@@ -462,7 +437,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Filter Tab Row */}
                 <div className="flex overflow-x-auto border-b border-brand-border bg-slate-950/20 px-6 py-2.5 gap-2 scrollbar-none">
                   {[
                     { label: 'All Records', value: '' },
@@ -488,7 +462,6 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Table Container */}
                 <div className="overflow-x-auto relative flex-1 min-h-[350px]">
                   {isLoadingReport ? (
                     <div className="absolute inset-0 bg-brand-dark/50 backdrop-blur-sm flex items-center justify-center z-10">
@@ -518,7 +491,7 @@ export default function Home() {
                       <tbody className="divide-y divide-brand-border">
                         {filteredRows.map((row) => (
                           <tr key={row._id} className="hover:bg-slate-900/30 transition-all">
-                            {/* User Side */}
+                            
                             <td className="py-4 px-4 align-top">
                               {row.userTransaction ? (
                                 <div className="flex flex-col gap-1">
@@ -538,7 +511,6 @@ export default function Home() {
                               )}
                             </td>
 
-                            {/* Exchange Side */}
                             <td className="py-4 px-4 align-top">
                               {row.exchangeTransaction ? (
                                 <div className="flex flex-col gap-1">
@@ -558,11 +530,10 @@ export default function Home() {
                               )}
                             </td>
 
-                            {/* Audits / Comparison details */}
                             <td className="py-4 px-4 align-top">
                               <div className="flex flex-col gap-2">
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
-                                  {/* Quantity Comparison */}
+                                  
                                   <div>
                                     <span className="text-[10px] text-slate-500 block uppercase font-bold">Quantity Compare</span>
                                     <div className="flex items-center gap-1 mt-0.5">
@@ -572,7 +543,6 @@ export default function Home() {
                                     </div>
                                   </div>
 
-                                  {/* Price Comparison */}
                                   <div className={row.matchDetails?.fieldsCompared.priceUsd.match === false ? 'p-1 rounded bg-amber-500/5 border border-amber-500/10' : ''}>
                                     <span className={`text-[10px] block uppercase font-bold ${row.matchDetails?.fieldsCompared.priceUsd.match === false ? 'text-amber-400' : 'text-slate-500'}`}>
                                       Price Compare {row.matchDetails?.fieldsCompared.priceUsd.match === false && '(!)'}
@@ -584,7 +554,6 @@ export default function Home() {
                                     </div>
                                   </div>
 
-                                  {/* Fee Comparison */}
                                   <div className={row.matchDetails?.fieldsCompared.fee.match === false ? 'p-1 rounded bg-amber-500/5 border border-amber-500/10' : ''}>
                                     <span className={`text-[10px] block uppercase font-bold ${row.matchDetails?.fieldsCompared.fee.match === false ? 'text-amber-400' : 'text-slate-500'}`}>
                                       Fee Compare {row.matchDetails?.fieldsCompared.fee.match === false && '(!)'}
@@ -596,7 +565,6 @@ export default function Home() {
                                     </div>
                                   </div>
 
-                                  {/* Delta Scores */}
                                   {row.matchDetails && (
                                     <div>
                                       <span className="text-[10px] text-slate-500 block uppercase font-bold">Deltas</span>
@@ -609,7 +577,6 @@ export default function Home() {
                               </div>
                             </td>
 
-                            {/* Status Category */}
                             <td className="py-4 px-4 align-top text-center">
                               {row.category === 'matched' && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -633,7 +600,6 @@ export default function Home() {
                               )}
                             </td>
 
-                            {/* Reason Description */}
                             <td className="py-4 px-4 align-top">
                               <p className="text-slate-400 text-xs leading-normal font-medium">{row.reason}</p>
                             </td>
@@ -644,7 +610,6 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Pagination Controls */}
                 {totalPages > 1 && (
                   <div className="p-4 border-t border-brand-border bg-slate-950/40 flex items-center justify-between">
                     <span className="text-xs text-slate-500 font-bold">

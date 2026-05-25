@@ -21,8 +21,8 @@ export async function triggerReconciliation(
     console.log('[RECONCILIATION] userCsvContent provided:', !!userCsvContent, userCsvContent ? `(${userCsvContent.length} chars)` : '');
     console.log('[RECONCILIATION] exchangeCsvContent provided:', !!exchangeCsvContent, exchangeCsvContent ? `(${exchangeCsvContent.length} chars)` : '');
 
-    const userSource = userCsvContent || path.resolve('src/data/user_transactions.csv');
-    const exchangeSource = exchangeCsvContent || path.resolve('src/data/exchange_transactions.csv');
+    const userSource = userCsvContent || path.join(process.cwd(), 'src', 'data', 'user_transactions.csv');
+    const exchangeSource = exchangeCsvContent || path.join(process.cwd(), 'src', 'data', 'exchange_transactions.csv');
 
     console.log('[RECONCILIATION] User source:', typeof userSource === 'string' && !userCsvContent ? userSource : '<csv-content>');
     console.log('[RECONCILIATION] Exchange source:', typeof exchangeSource === 'string' && !exchangeCsvContent ? exchangeSource : '<csv-content>');

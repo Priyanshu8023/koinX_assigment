@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import path from 'path';
-import fs from 'fs';
 import ReconciliationRun from '../models/ReconciliationRun.js';
 import { IngestionService } from '../services/IngestionService.js';
 import { MatchingEngine } from '../services/MatchingEngine.js';
 import { DEFAULT_TOLERANCES } from '../config/constants.js';
+import { defaultUserCsv, defaultExchangeCsv } from '../data/data.js';
 
 export async function triggerReconciliation(
   req: Request,
@@ -31,32 +30,12 @@ export async function triggerReconciliation(
     console.log('[RECONCILIATION] userCsvContent provided:', !!userCsvContent, userCsvContent ? `(${userCsvContent.length} chars)` : '');
     console.log('[RECONCILIATION] exchangeCsvContent provided:', !!exchangeCsvContent, exchangeCsvContent ? `(${exchangeCsvContent.length} chars)` : '');
 
-    // Resolve sources: prefer uploaded content, then fall back to bundled data files
-    const userSource = userCsvContent || path.join(process.cwd(), 'src', 'data', 'user_transactions.csv');
-    const exchangeSource = exchangeCsvContent || path.join(process.cwd(), 'src', 'data', 'exchange_transactions.csv');
+    // Resolve sources: prefer uploaded content, then fall back to bundled/compiled default datasets
+    const userSource = userCsvContent || defaultUserCsv;
+    const exchangeSource = exchangeCsvContent || defaultExchangeCsv;
 
-    console.log('[RECONCILIATION] User source:', userCsvContent ? '<csv-content>' : userSource);
-    console.log('[RECONCILIATION] Exchange source:', exchangeCsvContent ? '<csv-content>' : exchangeSource);
-
-    // If using file paths, verify the files actually exist
-    if (!userCsvContent && typeof userSource === 'string' && !fs.existsSync(userSource)) {
-      res.status(400).json({
-        title: 'Missing Source CSV Files',
-        status: 400,
-        detail: 'user_transactions.csv was not found on the server. Please upload it manually.',
-        instance: req.originalUrl
-      });
-      return;
-    }
-    if (!exchangeCsvContent && typeof exchangeSource === 'string' && !fs.existsSync(exchangeSource)) {
-      res.status(400).json({
-        title: 'Missing Source CSV Files',
-        status: 400,
-        detail: 'exchange_transactions.csv was not found on the server. Please upload it manually.',
-        instance: req.originalUrl
-      });
-      return;
-    }
+    console.log('[RECONCILIATION] User source: <csv-content>');
+    console.log('[RECONCILIATION] Exchange source: <csv-content>');
 
     const timestampToleranceSec = Number(req.body?.timestampToleranceSec) ||
       Number(process.env.TIMESTAMP_TOLERANCE_SECONDS) ||

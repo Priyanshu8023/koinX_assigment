@@ -28,7 +28,7 @@ export async function triggerReconciliation(
     console.log('[RECONCILIATION] Exchange source:', typeof exchangeSource === 'string' && !exchangeCsvContent ? exchangeSource : '<csv-content>');
 
     if (!userCsvContent || !exchangeCsvContent) {
-      if (typeof userSource === 'string' && !fs.existsSync(userSource)) {
+      if (!userCsvContent && typeof userSource === 'string' && !fs.existsSync(userSource)) {
         res.status(400).json({
           title: 'Missing Source CSV Files',
           status: 400,
@@ -37,7 +37,7 @@ export async function triggerReconciliation(
         });
         return;
       }
-      if (typeof exchangeSource === 'string' && !fs.existsSync(exchangeSource)) {
+      if (!exchangeCsvContent && typeof exchangeSource === 'string' && !fs.existsSync(exchangeSource)) {
         res.status(400).json({
           title: 'Missing Source CSV Files',
           status: 400,
@@ -61,6 +61,11 @@ export async function triggerReconciliation(
 
     const runId = await ReconciliationRun.generateNextRunId();
     console.log('[RECONCILIATION] Generated runId:', runId);
+
+    const mongoose = (await import('mongoose')).default;
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error('Database is not connected. Please ensure MONGODB_URI is correctly configured in Vercel and MongoDB Network Access allows 0.0.0.0/0.');
+    }
 
     const run = new ReconciliationRun({
       runId,

@@ -1,7 +1,15 @@
 {
-  "functions": {
-    "src/server.ts": {
-      "includeFiles": "src/data/**"
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/server.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["src/data/**"]
+      }
     }
-  }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "src/server.ts" }
+  ]
 }

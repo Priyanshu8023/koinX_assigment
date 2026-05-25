@@ -18,42 +18,52 @@ export async function triggerReconciliation(
     const userCsvContent = req.body?.userCsvContent;
     const exchangeCsvContent = req.body?.exchangeCsvContent;
 
+    // Validate types — must be strings if provided
+    if (userCsvContent !== undefined && typeof userCsvContent !== 'string') {
+      res.status(400).json({ title: 'Bad Request', status: 400, detail: 'userCsvContent must be a string.', instance: req.originalUrl });
+      return;
+    }
+    if (exchangeCsvContent !== undefined && typeof exchangeCsvContent !== 'string') {
+      res.status(400).json({ title: 'Bad Request', status: 400, detail: 'exchangeCsvContent must be a string.', instance: req.originalUrl });
+      return;
+    }
+
     console.log('[RECONCILIATION] userCsvContent provided:', !!userCsvContent, userCsvContent ? `(${userCsvContent.length} chars)` : '');
     console.log('[RECONCILIATION] exchangeCsvContent provided:', !!exchangeCsvContent, exchangeCsvContent ? `(${exchangeCsvContent.length} chars)` : '');
 
+    // Resolve sources: prefer uploaded content, then fall back to bundled data files
     const userSource = userCsvContent || path.join(process.cwd(), 'src', 'data', 'user_transactions.csv');
     const exchangeSource = exchangeCsvContent || path.join(process.cwd(), 'src', 'data', 'exchange_transactions.csv');
 
-    console.log('[RECONCILIATION] User source:', typeof userSource === 'string' && !userCsvContent ? userSource : '<csv-content>');
-    console.log('[RECONCILIATION] Exchange source:', typeof exchangeSource === 'string' && !exchangeCsvContent ? exchangeSource : '<csv-content>');
+    console.log('[RECONCILIATION] User source:', userCsvContent ? '<csv-content>' : userSource);
+    console.log('[RECONCILIATION] Exchange source:', exchangeCsvContent ? '<csv-content>' : exchangeSource);
 
-    if (!userCsvContent || !exchangeCsvContent) {
-      if (!userCsvContent && typeof userSource === 'string' && !fs.existsSync(userSource)) {
-        res.status(400).json({
-          title: 'Missing Source CSV Files',
-          status: 400,
-          detail: 'Reconciliation ledgers are missing. Please ensure user_transactions.csv exists in the data folder or upload it.',
-          instance: req.originalUrl
-        });
-        return;
-      }
-      if (!exchangeCsvContent && typeof exchangeSource === 'string' && !fs.existsSync(exchangeSource)) {
-        res.status(400).json({
-          title: 'Missing Source CSV Files',
-          status: 400,
-          detail: 'Reconciliation ledgers are missing. Please ensure exchange_transactions.csv exists in the data folder or upload it.',
-          instance: req.originalUrl
-        });
-        return;
-      }
+    // If using file paths, verify the files actually exist
+    if (!userCsvContent && typeof userSource === 'string' && !fs.existsSync(userSource)) {
+      res.status(400).json({
+        title: 'Missing Source CSV Files',
+        status: 400,
+        detail: 'user_transactions.csv was not found on the server. Please upload it manually.',
+        instance: req.originalUrl
+      });
+      return;
+    }
+    if (!exchangeCsvContent && typeof exchangeSource === 'string' && !fs.existsSync(exchangeSource)) {
+      res.status(400).json({
+        title: 'Missing Source CSV Files',
+        status: 400,
+        detail: 'exchange_transactions.csv was not found on the server. Please upload it manually.',
+        instance: req.originalUrl
+      });
+      return;
     }
 
-    const timestampToleranceSec = Number(req.body?.timestampToleranceSec) || 
-      Number(process.env.TIMESTAMP_TOLERANCE_SECONDS) || 
+    const timestampToleranceSec = Number(req.body?.timestampToleranceSec) ||
+      Number(process.env.TIMESTAMP_TOLERANCE_SECONDS) ||
       DEFAULT_TOLERANCES.TIMESTAMP_TOLERANCE_SECONDS;
 
-    const quantityTolerancePct = Number(req.body?.quantityTolerancePct) || 
-      Number(process.env.QUANTITY_TOLERANCE_PCT) || 
+    const quantityTolerancePct = Number(req.body?.quantityTolerancePct) ||
+      Number(process.env.QUANTITY_TOLERANCE_PCT) ||
       DEFAULT_TOLERANCES.QUANTITY_TOLERANCE_PCT;
 
     console.log('[RECONCILIATION] Config → timestampToleranceSec:', timestampToleranceSec);
@@ -61,11 +71,6 @@ export async function triggerReconciliation(
 
     const runId = await ReconciliationRun.generateNextRunId();
     console.log('[RECONCILIATION] Generated runId:', runId);
-
-    const mongoose = (await import('mongoose')).default;
-    if (mongoose.connection.readyState !== 1) {
-      throw new Error('Database is not connected. Please ensure MONGODB_URI is correctly configured in Vercel and MongoDB Network Access allows 0.0.0.0/0.');
-    }
 
     const run = new ReconciliationRun({
       runId,
@@ -98,3 +103,4 @@ export async function triggerReconciliation(
     next(error);
   }
 }
+

@@ -250,9 +250,7 @@ export default function Home() {
   const [exchangeFile, setExchangeFile] = useState<File | null>(null);
   const [useDefaultFiles, setUseDefaultFiles] = useState<boolean>(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(true);
-  const [modalTab, setModalTab] = useState<'new' | 'load'>('load');
-  const [inputRunId, setInputRunId] = useState<string>('');
-  const [isLoadingExistingRun, setIsLoadingExistingRun] = useState<boolean>(false);
+
 
 
   useEffect(() => {
@@ -380,31 +378,6 @@ export default function Home() {
       setErrorMsg(err.message);
     } finally {
       setIsReconciling(false);
-    }
-  };
-
-  const handleLoadExistingRun = async () => {
-    if (!inputRunId.trim()) return;
-    setIsLoadingExistingRun(true);
-    setErrorMsg(null);
-    try {
-      const summaryRes = await fetch(`${BACKEND_URL}/api/report/${inputRunId.trim()}/summary`);
-      if (!summaryRes.ok) {
-        const errData = await summaryRes.json();
-        throw new Error(errData.detail || 'Reconciliation run ID not found or server error.');
-      }
-      
-      const summaryData = await summaryRes.json();
-      setRunId(inputRunId.trim());
-      setStatus(summaryData.status || 'completed');
-      setSummary(summaryData.summary);
-      setConfig(summaryData.config);
-      
-      setIsUploadModalOpen(false);
-    } catch (err: any) {
-      setErrorMsg(err.message);
-    } finally {
-      setIsLoadingExistingRun(false);
     }
   };
 
@@ -854,150 +827,82 @@ export default function Home() {
               </div>
             )}
 
-            {/* Modal Tabs */}
-            <div className="flex border-b border-slate-800/80 -mt-2">
-              <button
-                type="button"
-                onClick={() => { setModalTab('new'); setErrorMsg(null); }}
-                className={`flex-1 pb-3 text-xs font-bold transition-all text-center border-b-2 cursor-pointer ${
-                  modalTab === 'new'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                New Run
-              </button>
-              <button
-                type="button"
-                onClick={() => { setModalTab('load'); setErrorMsg(null); }}
-                className={`flex-1 pb-3 text-xs font-bold transition-all text-center border-b-2 cursor-pointer ${
-                  modalTab === 'load'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Load Existing Run
-              </button>
-            </div>
-
             {/* Modal Body - Single Column */}
             <div className="flex flex-col gap-5">
-              {modalTab === 'load' ? (
+              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-950/30 border border-slate-800/80 hover:border-slate-700/80 transition-all animate-fadeIn">
+                <input
+                  type="checkbox"
+                  id="modal-use-defaults"
+                  checked={useDefaultFiles}
+                  onChange={(e) => {
+                    setUseDefaultFiles(e.target.checked);
+                    if (e.target.checked) {
+                      setErrorMsg(null);
+                    }
+                  }}
+                  className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20 h-5.5 w-5.5 cursor-pointer mt-0.5"
+                />
+                <div className="flex flex-col gap-0.5">
+                  <label htmlFor="modal-use-defaults" className="text-xs font-bold text-slate-200 cursor-pointer select-none">
+                    Use default system files
+                  </label>
+                  <span className="text-[10px] text-slate-500 leading-normal">
+                    Toggle this on to run the reconciler using preloaded dummy user/exchange transaction datasets on the backend without uploading files.
+                  </span>
+                </div>
+              </div>
+
+              {!useDefaultFiles ? (
                 <div className="flex flex-col gap-4 animate-fadeIn">
-                  <div className="flex flex-col gap-1.5 w-full text-left">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                      Reconciliation Run ID
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. RUN-001"
-                      value={inputRunId}
-                      onChange={(e) => setInputRunId(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs font-medium text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500 transition-all animate-fadeIn"
-                      disabled={isLoadingExistingRun}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleLoadExistingRun}
-                    disabled={isLoadingExistingRun || !inputRunId.trim()}
-                    className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2 transition-all ${
-                      isLoadingExistingRun || !inputRunId.trim()
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-blue-400 hover:scale-[1.01] cursor-pointer'
-                    }`}
-                  >
-                    {isLoadingExistingRun ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Verifying Run ID...
-                      </>
-                    ) : (
-                      <>
-                        <Layers className="h-4 w-4" />
-                        Load Run Dashboard
-                      </>
-                    )}
-                  </button>
+                  <FileDropzone
+                    label="User Ledger CSV"
+                    file={userFile}
+                    onFileSelect={setUserFile}
+                    disabled={isReconciling}
+                  />
+                  <FileDropzone
+                    label="Exchange Ledger CSV"
+                    file={exchangeFile}
+                    onFileSelect={setExchangeFile}
+                    disabled={isReconciling}
+                  />
                 </div>
               ) : (
-                <>
-                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-950/30 border border-slate-800/80 hover:border-slate-700/80 transition-all animate-fadeIn">
-                    <input
-                      type="checkbox"
-                      id="modal-use-defaults"
-                      checked={useDefaultFiles}
-                      onChange={(e) => {
-                        setUseDefaultFiles(e.target.checked);
-                        if (e.target.checked) {
-                          setErrorMsg(null);
-                        }
-                      }}
-                      className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20 h-5.5 w-5.5 cursor-pointer mt-0.5"
-                    />
-                    <div className="flex flex-col gap-0.5">
-                      <label htmlFor="modal-use-defaults" className="text-xs font-bold text-slate-200 cursor-pointer select-none">
-                        Use default system files
-                      </label>
-                      <span className="text-[10px] text-slate-500 leading-normal">
-                        Toggle this on to run the reconciler using preloaded dummy user/exchange transaction datasets on the backend without uploading files.
-                      </span>
-                    </div>
+                <div className="flex items-center justify-center p-6 rounded-xl bg-slate-950/20 border border-slate-800/80 text-[11px] text-slate-400 leading-normal text-center min-h-[140px] animate-fadeIn">
+                  <div>
+                    <Database className="h-8 w-8 text-indigo-400/50 mx-auto mb-2 animate-pulse" />
+                    Running in <b>demo mode</b>.<br />Reconciler will read sample ledger datasets pre-loaded on the server.
                   </div>
-
-                  {!useDefaultFiles ? (
-                    <div className="flex flex-col gap-4 animate-fadeIn">
-                      <FileDropzone
-                        label="User Ledger CSV"
-                        file={userFile}
-                        onFileSelect={setUserFile}
-                        disabled={isReconciling}
-                      />
-                      <FileDropzone
-                        label="Exchange Ledger CSV"
-                        file={exchangeFile}
-                        onFileSelect={setExchangeFile}
-                        disabled={isReconciling}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center p-6 rounded-xl bg-slate-950/20 border border-slate-800/80 text-[11px] text-slate-400 leading-normal text-center min-h-[140px] animate-fadeIn">
-                      <div>
-                        <Database className="h-8 w-8 text-indigo-400/50 mx-auto mb-2 animate-pulse" />
-                        Running in <b>demo mode</b>.<br />Reconciler will read sample ledger datasets pre-loaded on the server.
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col gap-2 mt-2">
-                    <button
-                      type="button"
-                      onClick={handleTriggerReconcile}
-                      disabled={isReconciling || isServerUp === false}
-                      className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2 transition-all ${
-                        isReconciling || isServerUp === false
-                          ? 'bg-slate-850 text-slate-500 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-blue-400 hover:scale-[1.01] hover:shadow-indigo-500/10 cursor-pointer'
-                      }`}
-                    >
-                      {isReconciling ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                          Executing Matching...
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 fill-current" />
-                          Start Reconciliation
-                        </>
-                      )}
-                    </button>
-                    <p className="text-[10px] text-center text-slate-500 font-medium leading-normal">
-                      * Check <b>"Use default system files"</b> above to run with demo data.
-                    </p>
-                  </div>
-                </>
+                </div>
               )}
+
+              <div className="flex flex-col gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={handleTriggerReconcile}
+                  disabled={isReconciling || isServerUp === false}
+                  className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2 transition-all ${
+                    isReconciling || isServerUp === false
+                      ? 'bg-slate-850 text-slate-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-blue-400 hover:scale-[1.01] hover:shadow-indigo-500/10 cursor-pointer'
+                  }`}
+                >
+                  {isReconciling ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Executing Matching...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 fill-current" />
+                      Start Reconciliation
+                    </>
+                  )}
+                </button>
+                <p className="text-[10px] text-center text-slate-500 font-medium leading-normal">
+                  * Check <b>"Use default system files"</b> above to run with demo data.
+                </p>
+              </div>
             </div>
 
           </div>

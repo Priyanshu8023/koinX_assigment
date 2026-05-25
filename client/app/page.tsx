@@ -19,7 +19,11 @@ import {
   XCircle,
   UploadCloud,
   FileText,
-  X
+  X,
+  ArrowRight,
+  Sliders,
+  Sparkles,
+  Info
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
@@ -82,27 +86,27 @@ const FileDropzone: React.FC<DropzoneProps> = ({ label, file, onFileSelect, disa
   };
 
   return (
-    <div className="flex flex-col gap-1.5 w-full">
-      <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+    <div className="flex flex-col gap-2 w-full text-left">
+      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
         {label}
       </label>
       
       {file ? (
-        <div className="flex items-center justify-between p-3 rounded-xl bg-indigo-950/20 border border-indigo-500/20 shadow-md">
-          <div className="flex items-center gap-2.5 overflow-hidden">
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-indigo-500/[0.03] border border-indigo-500/20 shadow-lg shadow-indigo-950/20 hover:border-indigo-500/35 transition-all">
+          <div className="flex items-center gap-3 overflow-hidden">
             <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400 flex-shrink-0">
-              <FileText className="h-4 w-4" />
+              <FileText className="h-4.5 w-4.5" />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-xs font-semibold text-slate-200 truncate">{file.name}</span>
-              <span className="text-[10px] text-slate-500 font-bold">{formatSize(file.size)}</span>
+              <span className="text-[10px] text-slate-500 font-bold tracking-wide mt-0.5">{formatSize(file.size)}</span>
             </div>
           </div>
           <button 
             type="button" 
             onClick={() => onFileSelect(null)}
             disabled={disabled}
-            className="p-1 text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 rounded-md transition-all cursor-pointer flex-shrink-0"
+            className="p-1.5 text-slate-500 hover:text-slate-200 hover:bg-slate-800/40 rounded-lg transition-all cursor-pointer flex-shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
@@ -114,12 +118,12 @@ const FileDropzone: React.FC<DropzoneProps> = ({ label, file, onFileSelect, disa
           onDragLeave={handleDrag}
           onDrop={handleDrop}
           onClick={onButtonClick}
-          className={`flex flex-col items-center justify-center p-5 rounded-xl border border-dashed transition-all cursor-pointer text-center gap-2 ${
+          className={`flex flex-col items-center justify-center p-6 rounded-xl border border-dashed transition-all cursor-pointer text-center gap-3 ${
             disabled 
-              ? 'bg-slate-900/10 border-slate-900/30 text-slate-600 cursor-not-allowed'
+              ? 'bg-slate-900/10 border-slate-900/20 text-slate-650 cursor-not-allowed'
               : isDragActive
-                ? 'border-indigo-500 bg-indigo-500/5 text-indigo-300 shadow-lg shadow-indigo-500/5'
-                : 'border-slate-800 bg-slate-950/20 hover:border-slate-700 hover:bg-slate-950/40 text-slate-400'
+                ? 'border-indigo-500 bg-indigo-500/[0.04] text-indigo-300 shadow-xl shadow-indigo-500/[0.03]'
+                : 'border-slate-800 bg-slate-950/30 hover:border-slate-700 hover:bg-slate-950/50 text-slate-400'
           }`}
         >
           <input
@@ -130,19 +134,20 @@ const FileDropzone: React.FC<DropzoneProps> = ({ label, file, onFileSelect, disa
             disabled={disabled}
             className="hidden"
           />
-          <UploadCloud className={`h-6 w-6 transition-transform ${isDragActive ? 'scale-110 text-indigo-400' : 'text-slate-500'}`} />
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] font-bold text-slate-300">
-              Drag & drop CSV or <span className="text-indigo-400 underline decoration-indigo-400/30">browse</span>
+          <div className={`p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/50 text-slate-400 transition-transform duration-300 ${isDragActive ? 'scale-110 text-indigo-400' : ''}`}>
+            <UploadCloud className="h-5 w-5" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold text-slate-350">
+              Drag & drop CSV or <span className="text-indigo-450 underline decoration-indigo-500/20">browse</span>
             </span>
-            <span className="text-[9px] text-slate-500">Max size 20MB</span>
+            <span className="text-[9px] text-slate-500 font-medium">Standard crypto ledger layout (Max size 20MB)</span>
           </div>
         </div>
       )}
     </div>
   );
 };
-
 
 interface SummaryData {
   matched: number;
@@ -198,25 +203,25 @@ interface ReconciliationResultRow {
 
 const TableSkeleton = () => {
   return (
-    <div className="w-full divide-y divide-brand-border/40 animate-pulse">
-      {[1, 2, 3, 4, 5, 6].map(i => (
-        <div key={i} className="py-4 px-6 grid grid-cols-5 gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="h-4 bg-slate-800/80 rounded w-3/4"></div>
-            <div className="h-2.5 bg-slate-900/50 rounded w-1/2"></div>
+    <div className="w-full divide-y divide-slate-900/60 animate-shimmer">
+      {[1, 2, 3, 4, 5].map(i => (
+        <div key={i} className="py-5 px-6 grid grid-cols-5 gap-6">
+          <div className="flex flex-col gap-2.5">
+            <div className="h-3.5 bg-slate-800/60 rounded-md w-3/4"></div>
+            <div className="h-2 bg-slate-900/70 rounded-md w-1/2"></div>
           </div>
-          <div className="flex flex-col gap-2">
-            <div className="h-4 bg-slate-800/80 rounded w-2/3"></div>
-            <div className="h-2.5 bg-slate-900/50 rounded w-1/3"></div>
+          <div className="flex flex-col gap-2.5">
+            <div className="h-3.5 bg-slate-800/60 rounded-md w-2/3"></div>
+            <div className="h-2 bg-slate-900/70 rounded-md w-1/3"></div>
           </div>
-          <div className="flex flex-col gap-2">
-            <div className="h-4 bg-slate-800/80 rounded w-5/6"></div>
-            <div className="h-2.5 bg-slate-900/50 rounded w-1/2"></div>
+          <div className="flex flex-col gap-3">
+            <div className="h-3 bg-slate-850 rounded-md w-5/6"></div>
+            <div className="h-3 bg-slate-850 rounded-md w-2/3"></div>
           </div>
           <div className="flex justify-center items-center">
-            <div className="h-5 bg-slate-800/80 rounded-full w-16"></div>
+            <div className="h-5.5 bg-slate-850 rounded-full w-20"></div>
           </div>
-          <div className="h-4 bg-slate-800/80 rounded w-11/12"></div>
+          <div className="h-3 bg-slate-800/50 rounded-md w-full"></div>
         </div>
       ))}
     </div>
@@ -224,7 +229,6 @@ const TableSkeleton = () => {
 };
 
 export default function Home() {
-
   const [runId, setRunId] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [config, setConfig] = useState<RunConfig>({ timestampToleranceSec: 300, quantityTolerancePct: 0.01 });
@@ -253,7 +257,6 @@ export default function Home() {
   const [modalTab, setModalTab] = useState<'new' | 'load'>('load');
   const [inputRunId, setInputRunId] = useState<string>('');
   const [isLoadingExistingRun, setIsLoadingExistingRun] = useState<boolean>(false);
-
 
   useEffect(() => {
     async function checkHealth() {
@@ -333,7 +336,7 @@ export default function Home() {
     setPage(1);
 
     if (!useDefaultFiles && (!userFile || !exchangeFile)) {
-      setErrorMsg('Please upload both User and Exchange CSV files, or check "Use default system files".');
+      setErrorMsg('Please upload both User and Exchange CSV files, or select "Use default system files".');
       setIsReconciling(false);
       return;
     }
@@ -356,7 +359,9 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...(userCsvContent ? { userCsvContent } : {}),
-          ...(exchangeCsvContent ? { exchangeCsvContent } : {})
+          ...(exchangeCsvContent ? { exchangeCsvContent } : {}),
+          timestampToleranceSec: formTimestampTolerance,
+          quantityTolerancePct: formQuantityTolerance
         })
       });
 
@@ -408,7 +413,6 @@ export default function Home() {
     }
   };
 
-
   const handleDownloadCSV = () => {
     if (!runId) return;
     window.open(`${BACKEND_URL}/api/report/${runId}?format=csv`, '_blank');
@@ -446,159 +450,176 @@ export default function Home() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-brand-dark text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-brand-dark text-slate-100 flex flex-col antialiased selection:bg-indigo-500/30">
       
-      <header className="border-b border-brand-border py-4 px-6 md:px-12 flex items-center justify-between bg-slate-950/60 backdrop-blur-md sticky top-0 z-50">
+      {/* Dynamic Navigation Header */}
+      <header className="border-b border-brand-border py-4 px-6 md:px-12 flex items-center justify-between bg-[#040813]/80 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-xl shadow-lg shadow-indigo-500/20">
-            <Layers className="h-6 w-6 text-white" />
+          <div className="p-2 bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-600 rounded-xl shadow-lg glow-indigo border border-indigo-400/20">
+            <Layers className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
+            <h1 className="text-[15px] font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
               KoinX Reconciler
             </h1>
-            <p className="text-xs text-slate-400 font-medium">Transaction Reconciliation Engine</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Automated Cryptographic Ledger</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3.5">
           {runId && (
             <button
               onClick={() => setIsUploadModalOpen(true)}
-              className="px-4 py-2 mr-2 bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-500/10 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-lg text-[11px] font-bold shadow-md shadow-indigo-950/50 hover:scale-[1.01] hover:-translate-y-0.5 active:scale-[0.99] transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <UploadCloud className="h-3.5 w-3.5" /> New Reconciliation
+              <UploadCloud className="h-3.5 w-3.5" /> Re-Reconcile
             </button>
           )}
+
           {isServerUp === true && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Check className="h-3.5 w-3.5" /> Engine Connected
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/[0.04] text-emerald-450 border border-emerald-500/10">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-450 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-550"></span>
+              </span>
+              Engine Active
             </span>
           )}
           {isServerUp === false && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 animate-pulse">
-              <XCircle className="h-3.5 w-3.5" /> Connection Offline
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold bg-rose-500/[0.04] text-rose-450 border border-rose-500/10 animate-pulse-soft">
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+              Engine Disconnected
             </span>
           )}
           {isServerUp === null && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Pinging...
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-500/[0.04] text-slate-450 border border-slate-500/10">
+              <RefreshCw className="h-3 w-3 animate-spin text-slate-500" />
+              Pinging Core...
             </span>
           )}
         </div>
       </header>
 
       {errorMsg && (
-        <div className="mx-6 md:mx-12 mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl flex items-start gap-3 shadow-lg shadow-rose-500/5">
-          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <div>
-            <h4 className="font-bold text-sm">Execution Disruption</h4>
-            <p className="text-xs mt-1 text-rose-300/90">{errorMsg}</p>
+        <div className="mx-6 md:mx-12 mt-6 p-4 bg-rose-500/[0.02] border border-rose-500/10 text-rose-400 rounded-xl flex items-start gap-3.5 shadow-lg shadow-rose-950/10 animate-fadeIn">
+          <AlertCircle className="h-5 w-5 mt-0.5 text-rose-500 flex-shrink-0" />
+          <div className="flex-1">
+            <h4 className="font-bold text-xs text-slate-200">Reconciliation Error</h4>
+            <p className="text-[11px] mt-1 text-slate-400 leading-normal">{errorMsg}</p>
           </div>
         </div>
       )}
 
-      <main className="flex-1 p-6 md:p-12 flex flex-col items-center justify-center">
+      <main className="flex-1 p-6 md:p-12 flex flex-col items-center justify-center max-w-7xl w-full mx-auto">
         {runId ? (
           <div className="w-full flex flex-col gap-6 animate-fadeIn">
             
+            {/* Redesigned Metrics Grid */}
             {summary ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 
-                <div className="glass-panel p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-indigo-500 shadow-xl">
-                  <div>
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Match Success Rate</span>
-                    <h2 className="text-3xl font-extrabold tracking-tight text-white mt-1.5">{matchRate}%</h2>
-                    <span className="text-[10px] text-slate-500 font-semibold block mt-1">Excludes exchange unmatched</span>
+                {/* Metric 1 */}
+                <div className="premium-card p-5 rounded-2xl flex items-center justify-between border-l-2 border-l-indigo-500 shadow-xl bg-brand-slate">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-slate-500 font-extrabold uppercase tracking-wider">Success Yield Rate</span>
+                    <h2 className="text-2xl font-extrabold tracking-tight text-white mt-1.5">{matchRate}%</h2>
+                    <span className="text-[10px] text-slate-400 font-medium mt-1">Matched user pairings</span>
                   </div>
-                  <div className="h-12 w-12 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="h-6 w-6" />
-                  </div>
-                </div>
-
-                <div className="glass-panel p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-emerald-500 shadow-xl">
-                  <div>
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Perfect Matches</span>
-                    <h2 className="text-3xl font-extrabold tracking-tight text-emerald-400 mt-1.5">{summary.matched}</h2>
-                    <span className="text-[10px] text-slate-500 font-semibold block mt-1">100% matched pairs</span>
-                  </div>
-                  <div className="h-12 w-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center">
-                    <CheckCircle className="h-6 w-6" />
+                  <div className="h-10 w-10 bg-indigo-500/[0.06] text-indigo-400 rounded-xl flex items-center justify-center border border-indigo-500/10 shadow-inner glow-indigo">
+                    <TrendingUp className="h-4.5 w-4.5" />
                   </div>
                 </div>
 
-                <div className="glass-panel p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-amber-500 shadow-xl">
-                  <div>
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Discrepancy Conflicts</span>
-                    <h2 className="text-3xl font-extrabold tracking-tight text-amber-500 mt-1.5">{summary.conflicting}</h2>
-                    <span className="text-[10px] text-slate-500 font-semibold block mt-1">Fee/Price discrepancies</span>
+                {/* Metric 2 */}
+                <div className="premium-card p-5 rounded-2xl flex items-center justify-between border-l-2 border-l-emerald-500 shadow-xl bg-brand-slate">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-slate-500 font-extrabold uppercase tracking-wider">Perfect Pairings</span>
+                    <h2 className="text-2xl font-extrabold tracking-tight text-emerald-450 mt-1.5">{summary.matched}</h2>
+                    <span className="text-[10px] text-slate-400 font-medium mt-1">Zero delta variances</span>
                   </div>
-                  <div className="h-12 w-12 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center">
-                    <AlertTriangle className="h-6 w-6" />
+                  <div className="h-10 w-10 bg-emerald-500/[0.06] text-emerald-400 rounded-xl flex items-center justify-center border border-emerald-500/10 shadow-inner glow-emerald">
+                    <CheckCircle className="h-4.5 w-4.5" />
                   </div>
                 </div>
 
-                <div className="glass-panel p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-rose-500 shadow-xl">
-                  <div>
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Unmatched Items</span>
-                    <h2 className="text-3xl font-extrabold tracking-tight text-rose-500 mt-1.5">
+                {/* Metric 3 */}
+                <div className="premium-card p-5 rounded-2xl flex items-center justify-between border-l-2 border-l-amber-500 shadow-xl bg-brand-slate">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-slate-500 font-extrabold uppercase tracking-wider">Fee / Price Drifts</span>
+                    <h2 className="text-2xl font-extrabold tracking-tight text-amber-500 mt-1.5">{summary.conflicting}</h2>
+                    <span className="text-[10px] text-slate-400 font-medium mt-1">Flagged conflicts</span>
+                  </div>
+                  <div className="h-10 w-10 bg-amber-500/[0.06] text-amber-550 rounded-xl flex items-center justify-center border border-amber-500/10 shadow-inner glow-amber">
+                    <AlertTriangle className="h-4.5 w-4.5" />
+                  </div>
+                </div>
+
+                {/* Metric 4 */}
+                <div className="premium-card p-5 rounded-2xl flex items-center justify-between border-l-2 border-l-rose-500 shadow-xl bg-brand-slate">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-slate-500 font-extrabold uppercase tracking-wider">Orphan Exclusions</span>
+                    <h2 className="text-2xl font-extrabold tracking-tight text-rose-500 mt-1.5">
                       {summary.unmatchedUser + summary.unmatchedExchange}
                     </h2>
-                    <span className="text-[10px] text-slate-500 font-semibold block mt-1">
+                    <span className="text-[10px] text-slate-400 font-medium mt-1">
                       User: {summary.unmatchedUser} | Exch: {summary.unmatchedExchange}
                     </span>
                   </div>
-                  <div className="h-12 w-12 bg-rose-500/10 text-rose-400 rounded-xl flex items-center justify-center">
-                    <XCircle className="h-6 w-6" />
+                  <div className="h-10 w-10 bg-rose-500/[0.06] text-rose-450 rounded-xl flex items-center justify-center border border-rose-500/10 shadow-inner glow-rose">
+                    <XCircle className="h-4.5 w-4.5" />
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="glass-panel p-8 rounded-2xl flex items-center justify-center">
-                <RefreshCw className="h-6 w-6 text-indigo-400 animate-spin" />
-                <span className="ml-3 text-sm text-slate-300">Retrieving metrics summary...</span>
+              <div className="premium-card p-8 rounded-2xl flex items-center justify-center bg-brand-slate border border-white/[0.03]">
+                <RefreshCw className="h-4 w-4 text-indigo-400 animate-spin mr-3" />
+                <span className="text-xs text-slate-400 font-semibold tracking-wide">Compiling cryptographic metrics...</span>
               </div>
             )}
 
-            <div className="glass-panel rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            {/* Dashboard Workspace */}
+            <div className="premium-card rounded-2xl shadow-2xl overflow-hidden flex flex-col bg-brand-slate">
               
-              <div className="p-6 border-b border-brand-border flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950/40">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2.5">
-                    <Database className="h-4.5 w-4.5 text-slate-400" />
-                    <h3 className="font-bold text-base text-slate-200">Reconciliation Report</h3>
+              {/* Filter & Actions Bar */}
+              <div className="p-5 border-b border-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950/30">
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-slate-500" />
+                    <h3 className="font-bold text-xs text-slate-200 uppercase tracking-wider">Reconciliation Ledger</h3>
                   </div>
-                  <span className="text-xs text-slate-400">Run ID: <span className="font-mono text-indigo-400 font-semibold">{runId}</span></span>
+                  <span className="text-[10px] text-slate-500 font-bold tracking-wide">
+                    RUN ID: <span className="font-mono text-indigo-400 font-extrabold">{runId}</span>
+                  </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  
-                  <div className="flex items-center bg-slate-950/50 border border-slate-800 rounded-lg px-3 py-2 w-full md:w-64">
-                    <Search className="h-4 w-4 text-slate-500 mr-2 flex-shrink-0" />
+                <div className="flex flex-wrap items-center gap-3.5">
+                  <div className="flex items-center bg-slate-950/70 border border-slate-900 rounded-xl px-3.5 py-2 w-full md:w-60 focus-within:border-indigo-500/30 transition-all">
+                    <Search className="h-4 w-4 text-slate-650 mr-2 flex-shrink-0" />
                     <input 
                       type="text" 
-                      placeholder="Search assets or IDs..." 
+                      placeholder="Search transactions, assets..." 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-transparent border-0 outline-none text-xs w-full text-slate-200 placeholder-slate-500"
+                      className="bg-transparent border-0 outline-none text-xs w-full text-slate-250 placeholder-slate-600 font-medium"
                     />
                   </div>
 
                   <button
                     onClick={handleDownloadCSV}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5 border border-slate-700 transition-all cursor-pointer"
+                    className="px-4 py-2 bg-slate-900/60 hover:bg-slate-800/80 text-slate-350 hover:text-slate-100 rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 border border-slate-800 hover:border-slate-700 active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    <Download className="h-3.5 w-3.5" /> Export CSV
+                    <Download className="h-3.5 w-3.5" /> Export Audit CSV
                   </button>
                 </div>
               </div>
 
-              <div className="flex overflow-x-auto border-b border-brand-border bg-slate-950/20 px-6 py-2.5 gap-2 scrollbar-none">
+              {/* Advanced Category Tabs */}
+              <div className="flex overflow-x-auto border-b border-slate-900 bg-slate-950/[0.15] px-5 py-2.5 gap-2 scrollbar-none">
                 {[
-                  { label: 'All Records', value: '' },
+                  { label: 'All Results', value: '' },
                   { label: 'Perfect Matches', value: 'matched' },
                   { label: 'Conflicts', value: 'conflicting' },
-                  { label: 'Unmatched Only', value: 'unmatched' }
+                  { label: 'Orphans / Unmatched', value: 'unmatched' }
                 ].map((tab) => (
                   <button
                     key={tab.value}
@@ -606,10 +627,10 @@ export default function Home() {
                       setActiveCategoryFilter(tab.value);
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase whitespace-nowrap transition-all cursor-pointer ${
                       activeCategoryFilter === tab.value
-                        ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                        : 'bg-transparent text-slate-400 hover:text-slate-200'
+                        ? 'bg-indigo-500/[0.08] text-indigo-400 border border-indigo-500/25 shadow-inner'
+                        : 'bg-transparent text-slate-500 hover:text-slate-300'
                     }`}
                   >
                     {tab.label}
@@ -617,111 +638,129 @@ export default function Home() {
                 ))}
               </div>
 
+              {/* Side-by-Side Comparison Table */}
               <div className="overflow-x-auto relative flex-1 min-h-[350px]">
                 {isLoadingReport ? (
                   <TableSkeleton />
                 ) : filteredRows.length === 0 ? (
-                  <div className="p-16 flex flex-col items-center justify-center text-center gap-3">
-                    <AlertCircle className="h-10 w-10 text-slate-600" />
-                    <div className="max-w-xs">
-                      <h4 className="font-bold text-sm text-slate-300">No report records found</h4>
-                      <p className="text-xs text-slate-500 mt-1">
-                        No transactions found matching the selected category or search filters.
+                  <div className="p-16 flex flex-col items-center justify-center text-center gap-3 animate-fadeIn">
+                    <div className="p-4 bg-slate-900/40 rounded-full border border-slate-800/50 text-slate-600">
+                      <Sparkles className="h-6 w-6" />
+                    </div>
+                    <div className="max-w-xs flex flex-col gap-1">
+                      <h4 className="font-extrabold text-xs text-slate-300 uppercase tracking-wider">No results matched</h4>
+                      <p className="text-[10px] text-slate-500 leading-normal">
+                        No transactions found in this category or matching your search filter terms.
                       </p>
                     </div>
                   </div>
                 ) : (
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-slate-900/50 border-b border-brand-border text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <thead className="bg-[#050914]/80 border-b border-slate-900 text-slate-500 font-extrabold uppercase tracking-wider text-[9px] sticky top-0 z-10">
                       <tr>
-                        <th className="py-3.5 px-4 w-[20%]">User Transaction</th>
-                        <th className="py-3.5 px-4 w-[20%]">Exchange Transaction</th>
-                        <th className="py-3.5 px-4 w-[30%]">Comparison & Audits</th>
-                        <th className="py-3.5 px-4 w-[12%] text-center">Status</th>
-                        <th className="py-3.5 px-4 w-[18%]">Reason</th>
+                        <th className="py-4 px-5 w-[22%]">User Ledger Record</th>
+                        <th className="py-4 px-5 w-[22%]">Exchange Receipt</th>
+                        <th className="py-4 px-5 w-[30%]">Comparison Matrix</th>
+                        <th className="py-4 px-4 w-[12%] text-center">Audit Status</th>
+                        <th className="py-4 px-5 w-[14%]">Diagnostic Reason</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-border">
+                    <tbody className="divide-y divide-slate-900/60">
                       {filteredRows.map((row, idx) => (
-                        <tr key={row._id || `${idx}-${row.userTransaction?.transactionId || ''}-${row.exchangeTransaction?.transactionId || ''}`} className="hover:bg-slate-900/30 transition-all">
+                        <tr key={row._id || `${idx}-${row.userTransaction?.transactionId || ''}-${row.exchangeTransaction?.transactionId || ''}`} className="hover:bg-slate-900/10 transition-all duration-150">
                           
-                          <td className="py-4 px-4 align-top">
+                          {/* User Ledger */}
+                          <td className="py-4 px-5 align-top border-r border-slate-900/30">
                             {row.userTransaction ? (
-                              <div className="flex flex-col gap-1">
-                                <span className="font-mono text-slate-300 font-semibold">{row.userTransaction.transactionId}</span>
-                                <span className="text-[10px] text-slate-500">
-                                  {new Date(row.userTransaction.timestamp).toLocaleTimeString()}
+                              <div className="flex flex-col gap-1.5">
+                                <span className="font-mono text-slate-300 font-extrabold text-[11px] tracking-tight">{row.userTransaction.transactionId}</span>
+                                <span className="text-[9px] text-slate-500 font-semibold tracking-wide flex items-center gap-1.5">
+                                  <Clock className="h-3 w-3 flex-shrink-0 text-slate-600" />
+                                  {new Date(row.userTransaction.timestamp).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                                 </span>
                                 <div className="flex items-center gap-1.5 mt-1">
-                                  <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 text-[10px] font-bold">
+                                  <span className="px-1.5 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-indigo-400 text-[9px] font-extrabold uppercase tracking-wider">
                                     {row.userTransaction.asset}
                                   </span>
-                                  <span className="text-slate-400 font-medium">{row.userTransaction.type}</span>
+                                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{row.userTransaction.type}</span>
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-slate-600 italic">No record</span>
+                              <span className="text-slate-650 italic text-[10px] font-semibold tracking-wide flex items-center gap-1">
+                                <Info className="h-3.5 w-3.5 text-slate-700" />
+                                Absent from User
+                              </span>
                             )}
                           </td>
 
-                          <td className="py-4 px-4 align-top">
+                          {/* Exchange Ledger */}
+                          <td className="py-4 px-5 align-top border-r border-slate-900/30">
                             {row.exchangeTransaction ? (
-                              <div className="flex flex-col gap-1">
-                                <span className="font-mono text-slate-300 font-semibold">{row.exchangeTransaction.transactionId}</span>
-                                <span className="text-[10px] text-slate-500">
-                                  {new Date(row.exchangeTransaction.timestamp).toLocaleTimeString()}
+                              <div className="flex flex-col gap-1.5">
+                                <span className="font-mono text-slate-300 font-extrabold text-[11px] tracking-tight">{row.exchangeTransaction.transactionId}</span>
+                                <span className="text-[9px] text-slate-500 font-semibold tracking-wide flex items-center gap-1.5">
+                                  <Clock className="h-3 w-3 flex-shrink-0 text-slate-600" />
+                                  {new Date(row.exchangeTransaction.timestamp).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
                                 </span>
                                 <div className="flex items-center gap-1.5 mt-1">
-                                  <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 text-[10px] font-bold">
+                                  <span className="px-1.5 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-indigo-400 text-[9px] font-extrabold uppercase tracking-wider">
                                     {row.exchangeTransaction.asset}
                                   </span>
-                                  <span className="text-slate-400 font-medium">{row.exchangeTransaction.type}</span>
+                                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{row.exchangeTransaction.type}</span>
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-slate-600 italic">No record</span>
+                              <span className="text-slate-650 italic text-[10px] font-semibold tracking-wide flex items-center gap-1">
+                                <Info className="h-3.5 w-3.5 text-slate-700" />
+                                Absent from Exchange
+                              </span>
                             )}
                           </td>
 
-                          <td className="py-4 px-4 align-top">
-                            <div className="flex flex-col gap-2">
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+                          {/* Comparison Matrix */}
+                          <td className="py-4 px-5 align-top">
+                            <div className="flex flex-col gap-3">
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[10px]">
                                 
+                                {/* Quantity */}
                                 <div>
-                                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Quantity Compare</span>
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    <span className="text-slate-300 font-medium">U: {row.userTransaction?.quantity ?? '-'}</span>
-                                    <span className="text-slate-500">|</span>
-                                    <span className="text-slate-300 font-medium">E: {row.exchangeTransaction?.quantity ?? '-'}</span>
+                                  <span className="text-[8.5px] text-slate-550 block uppercase font-bold tracking-wider">Qty Compare</span>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="text-slate-300 font-bold">U: {row.userTransaction?.quantity ?? '-'}</span>
+                                    <ArrowRight className="h-3 w-3 text-slate-650" />
+                                    <span className="text-slate-300 font-bold">E: {row.exchangeTransaction?.quantity ?? '-'}</span>
                                   </div>
                                 </div>
 
-                                <div className={row.matchDetails?.fieldsCompared.priceUsd.match === false ? 'p-1 rounded bg-amber-500/5 border border-amber-500/10' : ''}>
-                                  <span className={`text-[10px] block uppercase font-bold ${row.matchDetails?.fieldsCompared.priceUsd.match === false ? 'text-amber-400' : 'text-slate-500'}`}>
-                                    Price Compare {row.matchDetails?.fieldsCompared.priceUsd.match === false && '(!)'}
+                                {/* Price USD */}
+                                <div className={row.matchDetails?.fieldsCompared.priceUsd.match === false ? 'p-1 rounded bg-amber-500/[0.02] border border-amber-500/10' : ''}>
+                                  <span className={`text-[8.5px] block uppercase font-bold tracking-wider ${row.matchDetails?.fieldsCompared.priceUsd.match === false ? 'text-amber-450' : 'text-slate-550'}`}>
+                                    Price USD {row.matchDetails?.fieldsCompared.priceUsd.match === false && '(!)'}
                                   </span>
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    <span className="text-slate-300 font-medium">{formatCurrency(row.userTransaction?.priceUsd)}</span>
-                                    <span className="text-slate-500">|</span>
-                                    <span className="text-slate-300 font-medium">{formatCurrency(row.exchangeTransaction?.priceUsd)}</span>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="text-slate-300 font-semibold">{formatCurrency(row.userTransaction?.priceUsd)}</span>
+                                    <ArrowRight className="h-3 w-3 text-slate-650" />
+                                    <span className="text-slate-300 font-semibold">{formatCurrency(row.exchangeTransaction?.priceUsd)}</span>
                                   </div>
                                 </div>
 
-                                <div className={row.matchDetails?.fieldsCompared.fee.match === false ? 'p-1 rounded bg-amber-500/5 border border-amber-500/10' : ''}>
-                                  <span className={`text-[10px] block uppercase font-bold ${row.matchDetails?.fieldsCompared.fee.match === false ? 'text-amber-400' : 'text-slate-500'}`}>
+                                {/* Fee */}
+                                <div className={row.matchDetails?.fieldsCompared.fee.match === false ? 'p-1 rounded bg-amber-500/[0.02] border border-amber-500/10' : ''}>
+                                  <span className={`text-[8.5px] block uppercase font-bold tracking-wider ${row.matchDetails?.fieldsCompared.fee.match === false ? 'text-amber-450' : 'text-slate-550'}`}>
                                     Fee Compare {row.matchDetails?.fieldsCompared.fee.match === false && '(!)'}
                                   </span>
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    <span className="text-slate-300 font-medium">{formatFee(row.userTransaction?.fee, row.userTransaction?.asset)}</span>
-                                    <span className="text-slate-500">|</span>
-                                    <span className="text-slate-300 font-medium">{formatFee(row.exchangeTransaction?.fee, row.exchangeTransaction?.asset)}</span>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="text-slate-300 font-semibold">{formatFee(row.userTransaction?.fee, row.userTransaction?.asset)}</span>
+                                    <ArrowRight className="h-3 w-3 text-slate-650" />
+                                    <span className="text-slate-300 font-semibold">{formatFee(row.exchangeTransaction?.fee, row.exchangeTransaction?.asset)}</span>
                                   </div>
                                 </div>
 
+                                {/* Deltas */}
                                 {row.matchDetails && (
                                   <div>
-                                    <span className="text-[10px] text-slate-500 block uppercase font-bold">Deltas</span>
-                                    <span className="text-slate-300 font-medium mt-0.5 block">
+                                    <span className="text-[8.5px] text-slate-550 block uppercase font-bold tracking-wider">Deviations</span>
+                                    <span className="text-slate-300 font-bold mt-0.5 block tracking-wide">
                                       Time: {row.matchDetails.timestampDiffSec}s | Qty: {row.matchDetails.quantityDiffPct.toFixed(3)}%
                                     </span>
                                   </div>
@@ -730,31 +769,35 @@ export default function Home() {
                             </div>
                           </td>
 
+                          {/* Status Badge */}
                           <td className="py-4 px-4 align-top text-center">
-                            {row.category === 'matched' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                MATCHED
-                              </span>
-                            )}
-                            {row.category === 'conflicting' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">
-                                CONFLICT
-                              </span>
-                            )}
-                            {row.category === 'unmatched_user' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                                UNMATCHED (USR)
-                              </span>
-                            )}
-                            {row.category === 'unmatched_exchange' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                                UNMATCHED (EXC)
-                              </span>
-                            )}
+                            <div className="flex items-center justify-center min-h-[30px]">
+                              {row.category === 'matched' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider bg-emerald-500/[0.06] text-emerald-450 border border-emerald-500/15 glow-emerald">
+                                  MATCHED
+                                </span>
+                              )}
+                              {row.category === 'conflicting' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider bg-amber-500/[0.06] text-amber-500 border border-amber-500/15 animate-pulse-soft glow-amber">
+                                  CONFLICT
+                                </span>
+                              )}
+                              {row.category === 'unmatched_user' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider bg-rose-500/[0.06] text-rose-450 border border-rose-500/15 glow-rose">
+                                  ORPHAN (USR)
+                                </span>
+                              )}
+                              {row.category === 'unmatched_exchange' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider bg-rose-500/[0.06] text-rose-450 border border-rose-500/15 glow-rose">
+                                  ORPHAN (EXC)
+                                </span>
+                              )}
+                            </div>
                           </td>
 
-                          <td className="py-4 px-4 align-top">
-                            <p className="text-slate-400 text-xs leading-normal font-medium">{row.reason}</p>
+                          {/* Diagnostic Reason */}
+                          <td className="py-4 px-5 align-top">
+                            <p className="text-slate-400 text-[10.5px] leading-relaxed font-semibold">{row.reason}</p>
                           </td>
                         </tr>
                       ))}
@@ -763,10 +806,11 @@ export default function Home() {
                 )}
               </div>
 
+              {/* Paginated Footer */}
               {totalPages > 1 && (
-                <div className="p-4 border-t border-brand-border bg-slate-950/40 flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-bold">
-                    Page <span className="text-slate-300 font-semibold">{page}</span> of <span className="text-slate-300 font-semibold">{totalPages}</span>
+                <div className="p-4 border-t border-slate-900 bg-slate-950/20 flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">
+                    Page <span className="text-slate-300 font-bold">{page}</span> of <span className="text-slate-300 font-bold">{totalPages}</span>
                   </span>
                   <div className="flex items-center gap-2">
                     <button
@@ -774,8 +818,8 @@ export default function Home() {
                       disabled={page === 1}
                       className={`p-2 rounded-lg border text-slate-400 border-slate-800 transition-all ${
                         page === 1 
-                          ? 'opacity-40 cursor-not-allowed' 
-                          : 'hover:bg-slate-800 hover:text-white cursor-pointer'
+                          ? 'opacity-30 cursor-not-allowed' 
+                          : 'hover:bg-slate-850 hover:text-white cursor-pointer hover:border-slate-700 active:scale-[0.95]'
                       }`}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -785,8 +829,8 @@ export default function Home() {
                       disabled={page === totalPages}
                       className={`p-2 rounded-lg border text-slate-400 border-slate-800 transition-all ${
                         page === totalPages 
-                          ? 'opacity-40 cursor-not-allowed' 
-                          : 'hover:bg-slate-800 hover:text-white cursor-pointer'
+                          ? 'opacity-30 cursor-not-allowed' 
+                          : 'hover:bg-slate-850 hover:text-white cursor-pointer hover:border-slate-700 active:scale-[0.95]'
                       }`}
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -797,72 +841,120 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          /* Blank Slate Welcome view */
-          <div className="glass-panel p-16 rounded-2xl flex flex-col items-center justify-center text-center gap-5 shadow-xl max-w-2xl w-full mx-auto my-12 animate-fadeIn">
-            <div className="p-5 bg-indigo-500/10 text-indigo-400 rounded-full animate-bounce">
-              <Database className="h-10 w-10" />
+          /* Premium Onboarding Slate */
+          <div className="w-full max-w-4xl flex flex-col gap-8 py-6 animate-fadeIn">
+            
+            {/* Header Feature focal point */}
+            <div className="text-center flex flex-col items-center justify-center gap-4 max-w-xl mx-auto">
+              <div className="p-3 bg-indigo-500/[0.04] text-indigo-400 rounded-2xl border border-indigo-500/10 shadow-2xl animate-pulse-soft">
+                <Database className="h-8 w-8" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <h2 className="text-2xl font-extrabold tracking-tight text-slate-100">Cryptocurrency Ledger Reconciliation</h2>
+                <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                  Ingest decentralized self-reported transaction CSV ledgers and pair them against official exchange transaction receipts using score-based temporal algorithms.
+                </p>
+              </div>
             </div>
-            <div className="max-w-md flex flex-col gap-2">
-              <h2 className="text-xl font-bold text-slate-200">Reconciliation Dashboard</h2>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                No active reconciliation run detected. Upload your User and Exchange transaction CSV logs to perform automated transaction matching and generate audit reports.
-              </p>
+
+            {/* Quick Process Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="premium-card p-5 rounded-2xl flex flex-col gap-3.5 bg-brand-slate text-left">
+                <div className="h-8 w-8 bg-indigo-500/[0.06] rounded-xl flex items-center justify-center text-indigo-400 border border-indigo-500/10 font-extrabold text-xs">
+                  01
+                </div>
+                <div className="flex flex-col gap-1">
+                  <h4 className="font-bold text-xs text-slate-200 uppercase tracking-wider">Load Datasets</h4>
+                  <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                    Upload both User records and official Exchange ledgers or check demo mode to load preloaded transactions instantly.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="premium-card p-5 rounded-2xl flex flex-col gap-3.5 bg-brand-slate text-left">
+                <div className="h-8 w-8 bg-indigo-500/[0.06] rounded-xl flex items-center justify-center text-indigo-400 border border-indigo-500/10 font-extrabold text-xs">
+                  02
+                </div>
+                <div className="flex flex-col gap-1">
+                  <h4 className="font-bold text-xs text-slate-200 uppercase tracking-wider">Greedy Pairing</h4>
+                  <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                    The engine indexes asset types in O(1) partitions, evaluating spatial and temporal drift against configured tolerances.
+                  </p>
+                </div>
+              </div>
+
+              <div className="premium-card p-5 rounded-2xl flex flex-col gap-3.5 bg-brand-slate text-left">
+                <div className="h-8 w-8 bg-indigo-500/[0.06] rounded-xl flex items-center justify-center text-indigo-400 border border-indigo-500/10 font-extrabold text-xs">
+                  03
+                </div>
+                <div className="flex flex-col gap-1">
+                  <h4 className="font-bold text-xs text-slate-200 uppercase tracking-wider">Isolate Conflicts</h4>
+                  <p className="text-[10.5px] text-slate-500 font-semibold leading-relaxed">
+                    Instantly export fully detailed audit logs containing pricing mismatches, fee drift anomalies, and diagnostic traces.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Premium Button Trigger */}
+            <div className="flex justify-center mt-3">
               <button
                 onClick={() => setIsUploadModalOpen(true)}
-                className="mt-4 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.02] transition-all flex items-center gap-2 mx-auto cursor-pointer"
+                className="px-6 py-3.5 bg-gradient-to-r from-indigo-650 to-indigo-750 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl text-[11px] font-bold uppercase tracking-wider shadow-xl shadow-indigo-950/60 hover:shadow-indigo-500/[0.05] hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer border border-indigo-400/10"
               >
-                <UploadCloud className="h-4 w-4" /> Ingest & Reconcile Ledgers
+                <UploadCloud className="h-4.5 w-4.5" /> Initialize Reconciliation Run
               </button>
             </div>
+
           </div>
         )}
       </main>
 
-      {/* Initial Upload / New Run Modal Popup */}
+      {/* Modern Redesigned Dialog Modal */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/80 backdrop-blur-md">
-          <div className="glass-panel w-full max-w-md p-6 md:p-8 rounded-2xl flex flex-col gap-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#02050c]/90 backdrop-blur-xl animate-fadeIn">
+          <div className="premium-card w-full max-w-md p-6 md:p-7 rounded-2xl flex flex-col gap-5 shadow-2xl bg-brand-slate border border-white/[0.06] animate-in fade-in zoom-in-95 duration-200">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-brand-border pb-4">
+            <div className="flex items-center justify-between border-b border-slate-900 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-blue-500 rounded-xl shadow-lg shadow-indigo-500/20 animate-pulse">
-                  <UploadCloud className="h-5 w-5 text-white" />
+                <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg shadow-indigo-950 border border-indigo-400/20 text-white">
+                  <Sliders className="h-4.5 w-4.5" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-base text-slate-200">Reconciliation Data Source</h3>
-                  <p className="text-xs text-slate-500">Upload transaction CSV logs to begin</p>
+                <div className="text-left">
+                  <h3 className="font-bold text-sm text-slate-200 uppercase tracking-wider">Reconciliation Scope</h3>
+                  <p className="text-[10px] text-slate-500 font-bold mt-0.5 uppercase tracking-wide">Configure run settings & ledgers</p>
                 </div>
               </div>
               {runId && (
                 <button
                   onClick={() => setIsUploadModalOpen(false)}
-                  className="p-1.5 hover:bg-slate-800/60 rounded-lg text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
+                  className="p-1.5 hover:bg-slate-800/40 rounded-lg text-slate-550 hover:text-slate-200 transition-all cursor-pointer border border-transparent hover:border-slate-800"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4.5 w-4.5" />
                 </button>
               )}
             </div>
 
-            {/* Error Message inside modal */}
+            {/* Error alerts inside modal */}
             {errorMsg && (
-              <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl flex items-start gap-2.5 shadow-lg shadow-rose-500/5 animate-shake">
-                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <div className="text-xs">
-                  <span className="font-bold">Error:</span> {errorMsg}
+              <div className="p-3 bg-rose-500/[0.03] border border-rose-500/10 text-rose-450 rounded-xl flex items-start gap-2.5 shadow-md">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-rose-500" />
+                <div className="text-[10.5px] leading-normal font-semibold text-slate-350">
+                  <span className="font-bold text-rose-400">Alert:</span> {errorMsg}
                 </div>
               </div>
             )}
 
-            {/* Modal Tabs */}
-            <div className="flex border-b border-slate-800/80 -mt-2">
+            {/* Tab switch mechanism */}
+            <div className="flex border-b border-slate-900 -mt-1 p-0.5 bg-slate-950/40 rounded-xl">
               <button
                 type="button"
                 onClick={() => { setModalTab('new'); setErrorMsg(null); }}
-                className={`flex-1 pb-3 text-xs font-bold transition-all text-center border-b-2 cursor-pointer ${
+                className={`flex-1 py-2 text-[10px] font-extrabold uppercase tracking-wider transition-all text-center rounded-lg cursor-pointer ${
                   modalTab === 'new'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#0f1424] text-indigo-400 border border-white/[0.03] shadow-lg shadow-black/40'
+                    : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
                 New Run
@@ -870,30 +962,30 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => { setModalTab('load'); setErrorMsg(null); }}
-                className={`flex-1 pb-3 text-xs font-bold transition-all text-center border-b-2 cursor-pointer ${
+                className={`flex-1 py-2 text-[10px] font-extrabold uppercase tracking-wider transition-all text-center rounded-lg cursor-pointer ${
                   modalTab === 'load'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#0f1424] text-indigo-400 border border-white/[0.03] shadow-lg shadow-black/40'
+                    : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
                 Load Existing Run
               </button>
             </div>
 
-            {/* Modal Body - Single Column */}
-            <div className="flex flex-col gap-5">
+            {/* Form Fields */}
+            <div className="flex flex-col gap-4">
               {modalTab === 'load' ? (
                 <div className="flex flex-col gap-4 animate-fadeIn">
                   <div className="flex flex-col gap-1.5 w-full text-left">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                    <label className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">
                       Reconciliation Run ID
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. RUN-001"
+                      placeholder="e.g. b1e7f9a2"
                       value={inputRunId}
                       onChange={(e) => setInputRunId(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-xs font-medium text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500 transition-all animate-fadeIn"
+                      className="w-full px-4 py-3 bg-slate-950/60 border border-slate-900 rounded-xl text-xs font-semibold text-slate-200 placeholder-slate-650 outline-none focus:border-indigo-500/40 transition-all"
                       disabled={isLoadingExistingRun}
                     />
                   </div>
@@ -901,20 +993,20 @@ export default function Home() {
                     type="button"
                     onClick={handleLoadExistingRun}
                     disabled={isLoadingExistingRun || !inputRunId.trim()}
-                    className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2 transition-all ${
+                    className={`w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition-all ${
                       isLoadingExistingRun || !inputRunId.trim()
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-blue-400 hover:scale-[1.01] cursor-pointer'
+                        ? 'bg-slate-900 text-slate-600 cursor-not-allowed border border-transparent'
+                        : 'bg-gradient-to-r from-indigo-650 to-indigo-750 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-indigo-950/50 hover:scale-[1.01] hover:-translate-y-0.5 cursor-pointer border border-indigo-500/10'
                     }`}
                   >
                     {isLoadingExistingRun ? (
                       <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Verifying Run ID...
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        Fetching run records...
                       </>
                     ) : (
                       <>
-                        <Layers className="h-4 w-4" />
+                        <Layers className="h-3.5 w-3.5" />
                         Load Run Dashboard
                       </>
                     )}
@@ -922,7 +1014,8 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-950/30 border border-slate-800/80 hover:border-slate-700/80 transition-all animate-fadeIn">
+                  {/* Modern Checkbox Demo option */}
+                  <div className="flex items-start gap-3.5 p-3.5 rounded-xl bg-slate-950/30 border border-slate-900 hover:border-slate-800/80 transition-all animate-fadeIn">
                     <input
                       type="checkbox"
                       id="modal-use-defaults"
@@ -933,68 +1026,105 @@ export default function Home() {
                           setErrorMsg(null);
                         }
                       }}
-                      className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20 h-5.5 w-5.5 cursor-pointer mt-0.5"
+                      className="rounded border-slate-800 bg-slate-950 text-indigo-600 focus:ring-indigo-500/20 h-4.5 w-4.5 cursor-pointer mt-0.5"
                     />
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col gap-0.5 text-left">
                       <label htmlFor="modal-use-defaults" className="text-xs font-bold text-slate-200 cursor-pointer select-none">
-                        Use default system files
+                        Run with default system data
                       </label>
-                      <span className="text-[10px] text-slate-500 leading-normal">
-                        Toggle this on to run the reconciler using preloaded dummy user/exchange transaction datasets on the backend without uploading files.
+                      <span className="text-[10px] text-slate-500 leading-normal font-semibold">
+                        Toggle this on to run the reconciler using preloaded database ledgers without uploading manual CSVs.
                       </span>
                     </div>
                   </div>
 
+                  {/* Dropzone uploads or Info panel */}
                   {!useDefaultFiles ? (
                     <div className="flex flex-col gap-4 animate-fadeIn">
-                      <FileDropzone
-                        label="User Ledger CSV"
-                        file={userFile}
-                        onFileSelect={setUserFile}
-                        disabled={isReconciling}
-                      />
-                      <FileDropzone
-                        label="Exchange Ledger CSV"
-                        file={exchangeFile}
-                        onFileSelect={setExchangeFile}
-                        disabled={isReconciling}
-                      />
+                      <div className="grid grid-cols-1 gap-4">
+                        <FileDropzone
+                          label="User Ledger CSV"
+                          file={userFile}
+                          onFileSelect={setUserFile}
+                          disabled={isReconciling}
+                        />
+                        <FileDropzone
+                          label="Exchange Ledger CSV"
+                          file={exchangeFile}
+                          onFileSelect={setExchangeFile}
+                          disabled={isReconciling}
+                        />
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center p-6 rounded-xl bg-slate-950/20 border border-slate-800/80 text-[11px] text-slate-400 leading-normal text-center min-h-[140px] animate-fadeIn">
+                    <div className="flex items-center justify-center p-5 rounded-xl bg-slate-950/20 border border-slate-900 text-[10.5px] text-slate-400 font-semibold leading-normal text-center min-h-[140px] animate-fadeIn">
                       <div>
-                        <Database className="h-8 w-8 text-indigo-400/50 mx-auto mb-2 animate-pulse" />
-                        Running in <b>demo mode</b>.<br />Reconciler will read sample ledger datasets pre-loaded on the server.
+                        <Database className="h-6 w-6 text-indigo-500/50 mx-auto mb-2.5 animate-pulse-soft" />
+                        Running in <b className="text-indigo-400">demo dry-run mode</b>.<br />Reconciler will ingest sample datasets preloaded on the server.
                       </div>
                     </div>
                   )}
 
+                  {/* Polished custom tolerances section */}
+                  <div className="border-t border-slate-900 pt-4 flex flex-col gap-3 text-left">
+                    <span className="text-[9px] font-extrabold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sliders className="h-3 w-3" /> Custom Engine Tolerances
+                    </span>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Timestamp Tolerance input */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] font-bold text-slate-555 uppercase tracking-wide">Time Drift (sec)</label>
+                        <input
+                          type="number"
+                          value={formTimestampTolerance}
+                          onChange={(e) => setFormTimestampTolerance(Number(e.target.value))}
+                          placeholder="300"
+                          className="px-3.5 py-2.5 bg-slate-950/60 border border-slate-900 rounded-lg text-xs font-bold text-slate-200 outline-none focus:border-indigo-500/30 w-full"
+                          min="1"
+                        />
+                      </div>
+
+                      {/* Quantity Tolerance input */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[9px] font-bold text-slate-555 uppercase tracking-wide">Qty Drift (%)</label>
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={formQuantityTolerance}
+                          onChange={(e) => setFormQuantityTolerance(Number(e.target.value))}
+                          placeholder="0.01"
+                          className="px-3.5 py-2.5 bg-slate-950/60 border border-slate-900 rounded-lg text-xs font-bold text-slate-200 outline-none focus:border-indigo-500/30 w-full"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trigger buttons */}
                   <div className="flex flex-col gap-2 mt-2">
                     <button
                       type="button"
                       onClick={handleTriggerReconcile}
                       disabled={isReconciling || isServerUp === false}
-                      className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-xl flex items-center justify-center gap-2 transition-all ${
+                      className={`w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition-all ${
                         isReconciling || isServerUp === false
-                          ? 'bg-slate-850 text-slate-500 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white hover:from-indigo-500 hover:to-blue-400 hover:scale-[1.01] hover:shadow-indigo-500/10 cursor-pointer'
+                          ? 'bg-slate-900 text-slate-600 cursor-not-allowed border border-transparent'
+                          : 'bg-gradient-to-r from-indigo-650 to-indigo-750 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-indigo-950/50 hover:scale-[1.01] hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer border border-indigo-500/10'
                       }`}
                     >
                       {isReconciling ? (
                         <>
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                          Executing Matching...
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                          Executing Match algorithms...
                         </>
                       ) : (
                         <>
-                          <Play className="h-4 w-4 fill-current" />
+                          <Play className="h-3.5 w-3.5 fill-current" />
                           Start Reconciliation
                         </>
                       )}
                     </button>
-                    <p className="text-[10px] text-center text-slate-500 font-medium leading-normal">
-                      * Check <b>"Use default system files"</b> above to run with demo data.
-                    </p>
                   </div>
                 </>
               )}
